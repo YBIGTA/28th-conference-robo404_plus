@@ -1,0 +1,31 @@
+# ROS 2 / colcon build artifacts
+build/
+install/
+log/
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Local agent metadata
+.agents/
+.codex/
+
+# Gazebo / simulator local state
+.gazebo/
+*.log
