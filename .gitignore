@@ -29,3 +29,6 @@ env/
 # Gazebo / simulator local state
 .gazebo/
 *.log
+
+# personal context
+docs/

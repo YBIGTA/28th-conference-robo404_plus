@@ -1,0 +1,51 @@
+current_pipeline:
+  line_following:
+    input:
+      topic: "/camera/image_raw"
+      node: "follower_node"
+    output:
+      topic: "/cmd_vel"
+      node: "follower_node"
+      status: "to_be_changed"
+
+  yolo_detection:
+    input:
+      topic: "/camera/rgb/image_raw"
+      node: "yolo_node"
+    output:
+      topic: "/yolo/detections"
+      node: "yolo_node"
+      status: "keep"
+
+target_pipeline:
+  bottom_camera_line:
+    producer: "Bottom Camera"
+    output_topic: "/camera/image_raw"
+    consumer: "follower_node"
+    node_outputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+
+  top_camera_yolo:
+    producer: "Top Camera"
+    output_topic: "/camera/rgb/image_raw"
+    consumer: "yolo_node"
+    node_outputs:
+      - "/yolo/detections"
+
+  traffic_light:
+    producer: "yolo_node"
+    input_topic: "/yolo/detections"
+    consumer: "traffic_light_node"
+    node_outputs:
+      - "/traffic_light_state"
+
+  decision:
+    node: "decision_node"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/traffic_light_state"
+    outputs:
+      - "/cmd_vel"
+      - "/decision_state"

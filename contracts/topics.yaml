@@ -1,0 +1,91 @@
+topics:
+  "/camera/image_raw":
+    type: "sensor_msgs/msg/Image"
+    status: "existing"
+    producer: "Bottom Camera"
+    consumers:
+      - "follower_node"
+    description: "라인 검출용 하단 카메라 이미지"
+
+  "/camera/rgb/image_raw":
+    type: "sensor_msgs/msg/Image"
+    status: "existing"
+    producer: "Top Camera"
+    consumers:
+      - "yolo_node"
+      - "debug_node"
+    description: "YOLO 추론 및 디버그 시각화용 상단 카메라 이미지"
+
+  "/cmd_vel_line":
+    type: "geometry_msgs/msg/Twist"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "decision_node"
+    description: "라인 추종 기준 후보 속도. 최종 주행 명령이 아니다."
+
+  "/path_state":
+    type: "TBD"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "decision_node"
+    description: "라인 인식 상태"
+    candidate_fields:
+      - "line_visible"
+      - "line_error_x"
+      - "line_confidence"
+      - "lost_duration"
+
+  "/yolo/detections":
+    type: "yolo_msgs/msg/DetectionArray"
+    status: "existing"
+    producer: "yolo_node"
+    consumers:
+      - "traffic_light_node"
+      - "debug_node"
+    description: "YOLO 객체 검출 결과"
+
+  "/traffic_light_state":
+    type: "TBD"
+    status: "new"
+    producer: "traffic_light_node"
+    consumers:
+      - "decision_node"
+    description: "신호등 상태"
+    candidate_fields:
+      - "state: UNKNOWN / RED / GREEN"
+      - "confidence"
+      - "detected_class_name"
+      - "stamp"
+
+  "/cmd_vel":
+    type: "geometry_msgs/msg/Twist"
+    status: "changed"
+    producer: "decision_node"
+    consumers:
+      - "Robot Base"
+    description: "최종 주행 명령. 1차 구조에서는 decision_node만 발행한다."
+    previous_producer:
+      - "follower_node"
+
+  "/decision_state":
+    type: "TBD"
+    status: "new"
+    producer: "decision_node"
+    consumers:
+      - "debug"
+      - "logger"
+    description: "decision_node의 현재 판단 상태"
+    candidate_fields:
+      - "state: IDLE / FOLLOW_LINE / STOP_FOR_RED / WAIT_GREEN / LINE_LOST / FINAL_STOP"
+      - "reason"
+      - "motion_enabled"
+
+  "/yolo/dbg_image":
+    type: "sensor_msgs/msg/Image"
+    status: "existing"
+    producer: "debug_node"
+    consumers:
+      - "debug viewer"
+    description: "YOLO detection 결과가 그려진 디버그 이미지"

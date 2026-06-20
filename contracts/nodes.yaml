@@ -1,0 +1,83 @@
+nodes:
+  follower_node:
+    package: "follower"
+    status: "changed"
+    responsibility:
+      - "Bottom Camera 영상에서 라인 검출"
+      - "라인 기준 주행 후보 속도 생성"
+      - "라인 상태 생성"
+    inputs:
+      - "/camera/image_raw"
+    outputs:
+      add:
+        - "/cmd_vel_line"
+        - "/path_state"
+      remove_or_stop:
+        - "/cmd_vel"
+    services:
+      existing:
+        - "/start_follower"
+        - "/stop_follower"
+      note: "추후 전체 주행 시작/정지는 decision_node 쪽으로 옮기는 것이 좋다."
+
+  yolo_node:
+    package: "yolo_ros"
+    status: "existing"
+    responsibility:
+      - "Top Camera 영상에서 YOLO 객체 검출 수행"
+      - "검출 결과를 /yolo/detections로 발행"
+    inputs:
+      - "/camera/rgb/image_raw"
+    outputs:
+      - "/yolo/detections"
+    services:
+      existing:
+        - "/yolo/enable"
+        - "/yolo/set_classes"
+    note: "신호등 RED/GREEN 의미 판단은 yolo_node가 아니라 traffic_light_node에서 처리한다."
+
+  traffic_light_node:
+    package: "TBD"
+    status: "new"
+    responsibility:
+      - "/yolo/detections를 받아 신호등 상태로 변환"
+      - "UNKNOWN / RED / GREEN 상태 발행"
+    inputs:
+      - "/yolo/detections"
+    outputs:
+      - "/traffic_light_state"
+
+  decision_node:
+    package: "TBD"
+    status: "new"
+    responsibility:
+      - "라인 추종 후보 속도, 라인 상태, 신호등 상태를 종합"
+      - "최종 /cmd_vel 발행"
+      - "현재 판단 상태 /decision_state 발행"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/traffic_light_state"
+    outputs:
+      - "/cmd_vel"
+      - "/decision_state"
+    services:
+      candidates:
+        - "/start_driving"
+        - "/stop_driving"
+
+  debug_node:
+    package: "yolo_ros"
+    status: "changed"
+    responsibility:
+      - "YOLO detection 결과를 이미지 위에 그려서 확인"
+    inputs:
+      - "/camera/rgb/image_raw"
+      - "/yolo/detections"
+    outputs:
+      keep:
+        - "/yolo/dbg_image"
+      remove_or_ignore:
+        - "/yolo/dgb_bb_markers"
+        - "/yolo/dgb_kp_markers"
+    note: "1차 구조에서는 3D detection을 다루지 않으므로 3D marker 출력은 제거하거나 무시한다."
