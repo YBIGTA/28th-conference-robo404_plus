@@ -47,6 +47,30 @@ def generate_launch_description():
             DeclareLaunchArgument("debug_stream_bitrate", default_value="4000000"),
             DeclareLaunchArgument("debug_use_hw_encoder", default_value="True"),
             DeclareLaunchArgument("debug_draw_fps", default_value="True"),
+            DeclareLaunchArgument(
+                "publish_follower_debug_image", default_value="False"
+            ),
+            DeclareLaunchArgument(
+                "publish_follower_mask_image", default_value="False"
+            ),
+            DeclareLaunchArgument("enable_follower_debug_stream", default_value="False"),
+            DeclareLaunchArgument(
+                "follower_debug_stream_ip", default_value="127.0.0.1"
+            ),
+            DeclareLaunchArgument("follower_debug_stream_port", default_value="5001"),
+            DeclareLaunchArgument("follower_debug_stream_width", default_value="960"),
+            DeclareLaunchArgument("follower_debug_stream_height", default_value="540"),
+            DeclareLaunchArgument(
+                "follower_debug_stream_framerate", default_value="30"
+            ),
+            DeclareLaunchArgument(
+                "follower_debug_stream_bitrate", default_value="4000000"
+            ),
+            DeclareLaunchArgument(
+                "follower_debug_use_hw_encoder", default_value="True"
+            ),
+            DeclareLaunchArgument("follower_debug_draw_fps", default_value="True"),
+            DeclareLaunchArgument("show_follower_debug_window", default_value="False"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(perception_launch),
                 launch_arguments={
@@ -84,6 +108,44 @@ def generate_launch_description():
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(drive_launch),
+                launch_arguments={
+                    "publish_follower_debug_image": LaunchConfiguration(
+                        "publish_follower_debug_image"
+                    ),
+                    "publish_follower_mask_image": LaunchConfiguration(
+                        "publish_follower_mask_image"
+                    ),
+                    "enable_follower_debug_stream": LaunchConfiguration(
+                        "enable_follower_debug_stream"
+                    ),
+                    "follower_debug_stream_ip": LaunchConfiguration(
+                        "follower_debug_stream_ip"
+                    ),
+                    "follower_debug_stream_port": LaunchConfiguration(
+                        "follower_debug_stream_port"
+                    ),
+                    "follower_debug_stream_width": LaunchConfiguration(
+                        "follower_debug_stream_width"
+                    ),
+                    "follower_debug_stream_height": LaunchConfiguration(
+                        "follower_debug_stream_height"
+                    ),
+                    "follower_debug_stream_framerate": LaunchConfiguration(
+                        "follower_debug_stream_framerate"
+                    ),
+                    "follower_debug_stream_bitrate": LaunchConfiguration(
+                        "follower_debug_stream_bitrate"
+                    ),
+                    "follower_debug_use_hw_encoder": LaunchConfiguration(
+                        "follower_debug_use_hw_encoder"
+                    ),
+                    "follower_debug_draw_fps": LaunchConfiguration(
+                        "follower_debug_draw_fps"
+                    ),
+                    "show_follower_debug_window": LaunchConfiguration(
+                        "show_follower_debug_window"
+                    ),
+                }.items(),
             ),
         ]
     )

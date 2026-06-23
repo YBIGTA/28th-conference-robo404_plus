@@ -6,6 +6,8 @@ You may change the parameters to your liking.
 """
 __author__ = "Gabriel Nascarella Hishida do Nascimento"
 
+import time
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
@@ -64,12 +66,31 @@ def crop_size(height, width):
 
 # Global vars. initial values
 image_input = 0
+image_header = None
 error = 0
 just_seen_line = False
 just_seen_right_mark = False
 should_move = False
 right_mark_count = 0
 finalization_countdown = None
+publish_debug_image = False
+publish_mask_image = False
+show_debug_window = False
+enable_udp_stream = False
+stream_host = "127.0.0.1"
+stream_port = 5001
+stream_width = 960
+stream_height = 540
+stream_framerate = 30
+stream_bitrate = 4000000
+use_hw_encoder = True
+draw_fps = True
+debug_image_publisher = None
+mask_image_publisher = None
+stream_writer = None
+stream_failed = False
+last_frame_time = None
+fps = 0.0
 
 PATH_LINE_VISIBLE = "LINE_VISIBLE"
 PATH_LINE_LOST = "LINE_LOST"
@@ -104,8 +125,226 @@ def image_callback(msg):
     Update the global variable 'image_input'
     """
     global image_input
+    global image_header
     image_input = bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+    image_header = msg.header
     # node.get_logger().info('Received image')
+
+def update_fps():
+    """
+    Update and return an exponentially smoothed timer callback FPS.
+    """
+    global last_frame_time
+    global fps
+
+    now = time.monotonic()
+    if last_frame_time is not None:
+        elapsed = now - last_frame_time
+        if elapsed > 0.0:
+            instant_fps = 1.0 / elapsed
+            if fps <= 0.0:
+                fps = instant_fps
+            else:
+                fps = fps * 0.9 + instant_fps * 0.1
+    last_frame_time = now
+    return fps
+
+def draw_debug_overlay(output, path_state, mark_side, message):
+    """
+    Draw compact runtime state on the follower debug image.
+    """
+    lines = [
+        "path_state: {}".format(path_state),
+        "error: {:.1f}".format(float(error)),
+        "angular_z: {:.3f}".format(float(message.angular.z)),
+        "should_move: {}".format(should_move),
+        "mark_side: {}".format(mark_side if mark_side is not None else "none"),
+    ]
+    if draw_fps and fps > 0.0:
+        lines.append("fps: {:.2f}".format(fps))
+
+    y = 24
+    for line in lines:
+        cv2.putText(
+            output,
+            line,
+            (12, y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+        cv2.putText(
+            output,
+            line,
+            (12, y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (0, 0, 0),
+            1,
+            cv2.LINE_AA,
+        )
+        y += 24
+
+def publish_debug_outputs(output, mask):
+    """
+    Publish optional ROS image debug topics for headless Jetson validation.
+    """
+    if publish_debug_image and debug_image_publisher is not None:
+        debug_msg = bridge.cv2_to_imgmsg(output, encoding='bgr8')
+        if image_header is not None:
+            debug_msg.header = image_header
+        debug_image_publisher.publish(debug_msg)
+
+    if publish_mask_image and mask_image_publisher is not None:
+        mask_msg = bridge.cv2_to_imgmsg(mask, encoding='mono8')
+        if image_header is not None:
+            mask_msg.header = image_header
+        mask_image_publisher.publish(mask_msg)
+
+def validate_stream_parameters():
+    """
+    Check stream configuration before trying to open a GStreamer pipeline.
+    """
+    if not enable_udp_stream:
+        return True
+
+    numeric_parameters = {
+        "stream_port": stream_port,
+        "stream_width": stream_width,
+        "stream_height": stream_height,
+        "stream_framerate": stream_framerate,
+        "stream_bitrate": stream_bitrate,
+    }
+
+    for name, value in numeric_parameters.items():
+        if value <= 0:
+            node.get_logger().error("%s must be > 0", name)
+            return False
+
+    if not stream_host:
+        node.get_logger().error("stream_host must not be empty")
+        return False
+
+    return True
+
+def hardware_pipeline():
+    """
+    Return the Jetson hardware H.264 RTP GStreamer pipeline.
+    """
+    return (
+        "appsrc is-live=true block=false format=time do-timestamp=true"
+        f" ! video/x-raw,format=BGR,width=(int){stream_width}"
+        f",height=(int){stream_height}"
+        f",framerate=(fraction){stream_framerate}/1"
+        " ! queue leaky=downstream max-size-buffers=1"
+        " ! videoconvert ! video/x-raw,format=I420"
+        " ! nvvidconv"
+        f" ! nvv4l2h264enc bitrate={stream_bitrate}"
+        " insert-sps-pps=true"
+        " ! h264parse"
+        " ! rtph264pay config-interval=1 pt=96"
+        f" ! udpsink host={stream_host} port={stream_port}"
+        " sync=false async=false"
+    )
+
+def software_pipeline():
+    """
+    Return the software H.264 RTP GStreamer pipeline.
+    """
+    bitrate_kbps = max(1, int(stream_bitrate / 1000))
+    return (
+        "appsrc is-live=true block=false format=time do-timestamp=true"
+        f" ! video/x-raw,format=BGR,width=(int){stream_width}"
+        f",height=(int){stream_height}"
+        f",framerate=(fraction){stream_framerate}/1"
+        " ! queue leaky=downstream max-size-buffers=1"
+        " ! videoconvert ! video/x-raw,format=I420"
+        " ! x264enc tune=zerolatency speed-preset=ultrafast"
+        f" bitrate={bitrate_kbps}"
+        f" key-int-max={stream_framerate}"
+        " ! rtph264pay config-interval=1 pt=96"
+        f" ! udpsink host={stream_host} port={stream_port}"
+        " sync=false async=false"
+    )
+
+def open_stream_writer():
+    """
+    Open the UDP stream writer with hardware then software fallback.
+    """
+    global stream_writer
+    global stream_failed
+
+    if stream_writer is not None or stream_failed:
+        return
+
+    pipelines = []
+    if use_hw_encoder:
+        pipelines.append(("hardware", hardware_pipeline()))
+    pipelines.append(("software", software_pipeline()))
+
+    for pipeline_name, pipeline in pipelines:
+        writer = cv2.VideoWriter(
+            pipeline,
+            cv2.CAP_GSTREAMER,
+            0,
+            float(stream_framerate),
+            (stream_width, stream_height),
+            True,
+        )
+        if writer.isOpened():
+            stream_writer = writer
+            node.get_logger().info(
+                "Opened %s follower debug stream to %s:%d",
+                pipeline_name,
+                stream_host,
+                stream_port,
+            )
+            return
+
+        writer.release()
+        node.get_logger().warn(
+            "Failed to open %s follower debug stream pipeline",
+            pipeline_name,
+        )
+
+    stream_failed = True
+    node.get_logger().error(
+        "Follower UDP debug stream disabled after pipeline failures"
+    )
+
+def close_stream_writer():
+    """
+    Close the UDP stream writer.
+    """
+    global stream_writer
+
+    if stream_writer is not None:
+        stream_writer.release()
+        stream_writer = None
+
+def publish_stream(output):
+    """
+    Write one frame to the UDP stream.
+    """
+    if not enable_udp_stream or stream_failed:
+        return
+
+    open_stream_writer()
+    if stream_writer is None:
+        return
+
+    if output.shape[1] != stream_width or output.shape[0] != stream_height:
+        stream_image = cv2.resize(
+            output,
+            (stream_width, stream_height),
+            interpolation=cv2.INTER_LINEAR,
+        )
+    else:
+        stream_image = output
+
+    stream_writer.write(np.ascontiguousarray(stream_image))
 
 def get_contour_data(mask, out):
     """
@@ -179,6 +418,10 @@ def timer_callback():
     global should_move
     global right_mark_count
     global finalization_countdown
+    global publish_debug_image
+    global publish_mask_image
+    global show_debug_window
+    global enable_udp_stream
 
     # Wait for the first image to be received
     if type(image_input) != np.ndarray:
@@ -259,14 +502,19 @@ def timer_callback():
 
     # Plot the boundaries where the image was cropped
     cv2.rectangle(output, (crop_w_start, crop_h_start), (crop_w_stop, crop_h_stop), (0,0,255), 2)
+    update_fps()
+    draw_debug_overlay(output, path_state, mark_side, message)
 
     # Uncomment to show the binary picture
     #cv2.imshow("mask", mask)
 
-    # Show the output image to the user
-    cv2.imshow("output", output)
-    # Print the image for 5milis, then resume execution
-    cv2.waitKey(5)
+    publish_debug_outputs(output, mask)
+    publish_stream(output)
+
+    if show_debug_window:
+        # Show the output image to the user when a local display is available.
+        cv2.imshow("output", output)
+        cv2.waitKey(5)
 
     # Check for final countdown
     if finalization_countdown != None:
@@ -292,11 +540,83 @@ def main():
     global node
     node = Node('follower')
 
+    node.declare_parameter('publish_debug_image', False)
+    node.declare_parameter('publish_mask_image', False)
+    node.declare_parameter('show_debug_window', False)
+    node.declare_parameter('enable_udp_stream', False)
+    node.declare_parameter('stream_host', "127.0.0.1")
+    node.declare_parameter('stream_port', 5001)
+    node.declare_parameter('stream_width', 960)
+    node.declare_parameter('stream_height', 540)
+    node.declare_parameter('stream_framerate', 30)
+    node.declare_parameter('stream_bitrate', 4000000)
+    node.declare_parameter('use_hw_encoder', True)
+    node.declare_parameter('draw_fps', True)
+
+    global publish_debug_image
+    publish_debug_image = bool(node.get_parameter('publish_debug_image').value)
+
+    global publish_mask_image
+    publish_mask_image = bool(node.get_parameter('publish_mask_image').value)
+
+    global show_debug_window
+    show_debug_window = bool(node.get_parameter('show_debug_window').value)
+
+    global enable_udp_stream
+    enable_udp_stream = bool(node.get_parameter('enable_udp_stream').value)
+
+    global stream_host
+    stream_host = node.get_parameter('stream_host').value
+
+    global stream_port
+    stream_port = int(node.get_parameter('stream_port').value)
+
+    global stream_width
+    stream_width = int(node.get_parameter('stream_width').value)
+
+    global stream_height
+    stream_height = int(node.get_parameter('stream_height').value)
+
+    global stream_framerate
+    stream_framerate = int(node.get_parameter('stream_framerate').value)
+
+    global stream_bitrate
+    stream_bitrate = int(node.get_parameter('stream_bitrate').value)
+
+    global use_hw_encoder
+    use_hw_encoder = bool(node.get_parameter('use_hw_encoder').value)
+
+    global draw_fps
+    draw_fps = bool(node.get_parameter('draw_fps').value)
+
+    if not validate_stream_parameters():
+        enable_udp_stream = False
+
     global publisher
-    publisher = node.create_publisher(Twist, '/cmd_vel_line', rclpy.qos.qos_profile_system_default)
+    publisher = node.create_publisher(
+        Twist,
+        '/cmd_vel_line',
+        rclpy.qos.qos_profile_system_default,
+    )
 
     global path_state_publisher
     path_state_publisher = node.create_publisher(String, '/path_state', 10)
+
+    global debug_image_publisher
+    if publish_debug_image:
+        debug_image_publisher = node.create_publisher(
+            Image,
+            '/follower/debug_image',
+            10,
+        )
+
+    global mask_image_publisher
+    if publish_mask_image:
+        mask_image_publisher = node.create_publisher(
+            Image,
+            '/follower/mask_image',
+            10,
+        )
 
     subscription = node.create_subscription(Image, 'camera/image_raw',
                                             image_callback,
@@ -304,16 +624,26 @@ def main():
 
     timer = node.create_timer(TIMER_PERIOD, timer_callback)
 
-    start_service = node.create_service(Empty, 'start_follower', start_follower_callback)
-    stop_service = node.create_service(Empty, 'stop_follower', stop_follower_callback)
+    start_service = node.create_service(
+        Empty,
+        'start_follower',
+        start_follower_callback,
+    )
+    stop_service = node.create_service(
+        Empty,
+        'stop_follower',
+        stop_follower_callback,
+    )
 
     rclpy.spin(node)
+    close_stream_writer()
 
 try:
     main()
 except (KeyboardInterrupt, rclpy.exceptions.ROSInterruptException):
     empty_message = Twist()
     publisher.publish(empty_message)
+    close_stream_writer()
 
     node.destroy_node()
     rclpy.shutdown()

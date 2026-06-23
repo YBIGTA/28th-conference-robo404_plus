@@ -52,8 +52,23 @@ nodes:
       add:
         - "/cmd_vel_line"
         - "/path_state"
+        - "/follower/debug_image"
+        - "/follower/mask_image"
       remove_or_stop:
         - "/cmd_vel"
+    parameters:
+      - "publish_debug_image"
+      - "publish_mask_image"
+      - "enable_udp_stream"
+      - "stream_host"
+      - "stream_port"
+      - "stream_width"
+      - "stream_height"
+      - "stream_framerate"
+      - "stream_bitrate"
+      - "use_hw_encoder"
+      - "draw_fps"
+      - "show_debug_window"
     services:
       existing:
         - "/start_follower"
@@ -128,3 +143,22 @@ nodes:
         - "/yolo/dgb_bb_markers"
         - "/yolo/dgb_kp_markers"
     note: "use_debug:=True이면 UDP stream을 기본으로 켠다. /yolo/dbg_image는 publish_dbg_image:=True일 때만 발행한다."
+
+  debug_monitor_node:
+    package: "debug_monitor"
+    status: "planned"
+    responsibility:
+      - "주요 topic freshness 확인"
+      - "perception / decision / command 상태 한 줄 요약"
+      - "decision_state와 /cmd_vel 일관성 warning 발행"
+    inputs:
+      - "/path_state"
+      - "/cmd_vel_line"
+      - "/yolo/detections"
+      - "/traffic_light_state"
+      - "/decision_state"
+      - "/cmd_vel"
+    outputs:
+      - "/debug/pipeline_state"
+      - "/debug/pipeline_warnings"
+    note: "실제 판단을 바꾸지 않고 관측과 warning만 담당한다."

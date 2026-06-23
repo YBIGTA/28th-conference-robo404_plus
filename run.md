@@ -138,6 +138,47 @@ gst-launch-1.0 -v udpsrc port=5000 \
 
 ROS image topic도 같이 보고 싶으면 `publish_dbg_image:=True`를 추가한다.
 
+Follower line debug image를 같이 보려면:
+
+```bash
+ros2 launch robo404_bringup full_pipeline.launch.py \
+  engine_path:=/home/lee/models/yolov8n.engine \
+  bottom_sensor_id:=0 \
+  top_sensor_id:=1 \
+  publish_follower_debug_image:=True
+```
+
+Follower line debug 화면을 UDP H.264 stream으로 보려면:
+
+```bash
+ros2 launch robo404_bringup full_pipeline.launch.py \
+  engine_path:=/home/lee/models/yolov8n.engine \
+  bottom_sensor_id:=0 \
+  top_sensor_id:=1 \
+  enable_follower_debug_stream:=True \
+  follower_debug_stream_ip:=<receiver_pc_ip> \
+  follower_debug_stream_port:=5001
+```
+
+PC에서 수신:
+
+```bash
+gst-launch-1.0 -v udpsrc port=5001 \
+  caps="application/x-rtp,media=video,encoding-name=H264,payload=96" \
+  ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+```
+
+Follower threshold mask까지 보려면:
+
+```bash
+ros2 launch robo404_bringup full_pipeline.launch.py \
+  engine_path:=/home/lee/models/yolov8n.engine \
+  bottom_sensor_id:=0 \
+  top_sensor_id:=1 \
+  publish_follower_debug_image:=True \
+  publish_follower_mask_image:=True
+```
+
 주의:
 
 ```text
@@ -155,6 +196,15 @@ ros2 topic info /yolo/detections
 ros2 topic echo /traffic_light_state
 ros2 topic echo /path_state
 ros2 topic echo /decision_state
+ros2 topic hz /follower/debug_image
+ros2 topic hz /follower/mask_image
+```
+
+이미지 확인:
+
+```bash
+rqt_image_view /follower/debug_image
+rqt_image_view /follower/mask_image
 ```
 
 ## 5. 개별 디버깅: 카메라 실행
@@ -284,11 +334,30 @@ source install/setup.bash
 ros2 run follower follower_node
 ```
 
+debug image를 켜서 단독 실행하려면:
+
+```bash
+ros2 run follower follower_node --ros-args \
+  -p publish_debug_image:=true \
+  -p publish_mask_image:=true
+```
+
+UDP stream까지 켜서 단독 실행하려면:
+
+```bash
+ros2 run follower follower_node --ros-args \
+  -p enable_udp_stream:=true \
+  -p stream_host:=<receiver_pc_ip> \
+  -p stream_port:=5001
+```
+
 확인:
 
 ```bash
 ros2 topic echo /path_state
 ros2 topic echo /cmd_vel_line
+ros2 topic hz /follower/debug_image
+ros2 topic hz /follower/mask_image
 ```
 
 `follower_node`는 `/start_follower` 서비스가 호출되기 전에는 zero Twist를 낸다.
@@ -345,6 +414,7 @@ ros2 topic echo /traffic_light_state
 ros2 topic echo /path_state
 ros2 topic echo /decision_state
 ros2 topic echo /cmd_vel
+ros2 topic hz /follower/debug_image
 ```
 
 서비스 확인:
@@ -369,6 +439,9 @@ traffic light bbox가 잡히면 /traffic_light_state가 RED/GREEN/UNKNOWN으로 
 라인을 잃으면 /path_state가 LINE_LOST이다.
 RED 상태에서는 /decision_state가 STOP_FOR_RED 또는 WAIT_GREEN으로 바뀌고 /cmd_vel은 zero Twist다.
 GREEN 상태가 들어오면 /decision_state가 FOLLOW_LINE으로 바뀌고 /cmd_vel_line이 /cmd_vel로 통과된다.
+publish_follower_debug_image:=True이면 /follower/debug_image가 발행된다.
+publish_follower_mask_image:=True이면 /follower/mask_image가 발행된다.
+enable_follower_debug_stream:=True이면 follower debug 화면이 UDP port 5001로 송출된다.
 ```
 
 ## 13. 자주 나는 문제

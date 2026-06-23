@@ -54,3 +54,17 @@ target_pipeline:
     outputs:
       - "/cmd_vel"
       - "/decision_state"
+
+  debug_monitor:
+    node: "debug_monitor_node"
+    status: "planned"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/yolo/detections"
+      - "/traffic_light_state"
+      - "/decision_state"
+      - "/cmd_vel"
+    outputs:
+      - "/debug/pipeline_state"
+      - "/debug/pipeline_warnings"
