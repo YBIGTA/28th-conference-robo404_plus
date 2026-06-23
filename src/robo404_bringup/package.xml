@@ -16,6 +16,7 @@
   <exec_depend>traffic_light</exec_depend>
   <exec_depend>follower</exec_depend>
   <exec_depend>decision</exec_depend>
+  <exec_depend>debug_monitor</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

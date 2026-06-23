@@ -27,6 +27,16 @@ decision_node
   <- /traffic_light_state
   -> /cmd_vel
   -> /decision_state
+
+debug_monitor_node (optional)
+  <- /cmd_vel_line
+  <- /path_state
+  <- /yolo/detections
+  <- /traffic_light_state
+  <- /decision_state
+  <- /cmd_vel
+  -> /debug/pipeline_state
+  -> /debug/pipeline_warnings
 ```
 
 ## 1. 전제
@@ -100,6 +110,8 @@ traffic_light_node
 follower_node
 decision_node
 ```
+
+`use_debug_monitor:=True`를 추가하면 `debug_monitor_node`도 함께 실행한다.
 
 기본 연결:
 
@@ -179,6 +191,30 @@ ros2 launch robo404_bringup full_pipeline.launch.py \
   publish_follower_mask_image:=True
 ```
 
+이미지 stream 없이 전체 pipeline 상태만 SSH에서 확인하려면:
+
+```bash
+ros2 launch robo404_bringup full_pipeline.launch.py \
+  engine_path:=/home/lee/models/yolov8n.engine \
+  bottom_sensor_id:=0 \
+  top_sensor_id:=1 \
+  use_debug_monitor:=True
+```
+
+monitor 출력 확인:
+
+```bash
+ros2 topic echo /debug/pipeline_state
+ros2 topic echo /debug/pipeline_warnings
+```
+
+예상 형태:
+
+```text
+OK path=LINE_VISIBLE traffic=GREEN decision=FOLLOW_LINE yolo=4 tl_bbox=1 tl_score=0.92 tl_area=1536 cmd=PASS cmd_vel=(20.00,-0.13) reason=follow_line
+OK no_warnings
+```
+
 주의:
 
 ```text
@@ -196,6 +232,8 @@ ros2 topic info /yolo/detections
 ros2 topic echo /traffic_light_state
 ros2 topic echo /path_state
 ros2 topic echo /decision_state
+ros2 topic echo /debug/pipeline_state
+ros2 topic echo /debug/pipeline_warnings
 ros2 topic hz /follower/debug_image
 ros2 topic hz /follower/mask_image
 ```
@@ -414,6 +452,8 @@ ros2 topic echo /traffic_light_state
 ros2 topic echo /path_state
 ros2 topic echo /decision_state
 ros2 topic echo /cmd_vel
+ros2 topic echo /debug/pipeline_state
+ros2 topic echo /debug/pipeline_warnings
 ros2 topic hz /follower/debug_image
 ```
 

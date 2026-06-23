@@ -1,5 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -24,6 +25,34 @@ def generate_launch_description():
         "follower_debug_use_hw_encoder"
     )
     follower_debug_draw_fps = LaunchConfiguration("follower_debug_draw_fps")
+    use_debug_monitor = LaunchConfiguration("use_debug_monitor")
+    debug_monitor_publish_rate_hz = LaunchConfiguration(
+        "debug_monitor_publish_rate_hz"
+    )
+    debug_monitor_path_state_timeout_sec = LaunchConfiguration(
+        "debug_monitor_path_state_timeout_sec"
+    )
+    debug_monitor_cmd_vel_line_timeout_sec = LaunchConfiguration(
+        "debug_monitor_cmd_vel_line_timeout_sec"
+    )
+    debug_monitor_yolo_detections_timeout_sec = LaunchConfiguration(
+        "debug_monitor_yolo_detections_timeout_sec"
+    )
+    debug_monitor_traffic_light_state_timeout_sec = LaunchConfiguration(
+        "debug_monitor_traffic_light_state_timeout_sec"
+    )
+    debug_monitor_decision_state_timeout_sec = LaunchConfiguration(
+        "debug_monitor_decision_state_timeout_sec"
+    )
+    debug_monitor_cmd_vel_timeout_sec = LaunchConfiguration(
+        "debug_monitor_cmd_vel_timeout_sec"
+    )
+    debug_monitor_zero_twist_epsilon = LaunchConfiguration(
+        "debug_monitor_zero_twist_epsilon"
+    )
+    debug_monitor_cmd_compare_epsilon = LaunchConfiguration(
+        "debug_monitor_cmd_compare_epsilon"
+    )
 
     return LaunchDescription(
         [
@@ -51,6 +80,32 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("follower_debug_draw_fps", default_value="True"),
             DeclareLaunchArgument("show_follower_debug_window", default_value="False"),
+            DeclareLaunchArgument("use_debug_monitor", default_value="False"),
+            DeclareLaunchArgument("debug_monitor_publish_rate_hz", default_value="2.0"),
+            DeclareLaunchArgument(
+                "debug_monitor_path_state_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_vel_line_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_yolo_detections_timeout_sec", default_value="1.0"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_traffic_light_state_timeout_sec", default_value="1.0"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_decision_state_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_vel_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_zero_twist_epsilon", default_value="0.001"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_compare_epsilon", default_value="0.001"
+            ),
             Node(
                 package="follower",
                 executable="follower_node",
@@ -100,6 +155,47 @@ def generate_launch_description():
                 executable="decision_node",
                 name="decision_node",
                 output="screen",
+            ),
+            Node(
+                package="debug_monitor",
+                executable="debug_monitor_node",
+                name="debug_monitor_node",
+                output="screen",
+                condition=IfCondition(use_debug_monitor),
+                parameters=[
+                    {
+                        "publish_rate_hz": ParameterValue(
+                            debug_monitor_publish_rate_hz, value_type=float
+                        ),
+                        "path_state_timeout_sec": ParameterValue(
+                            debug_monitor_path_state_timeout_sec, value_type=float
+                        ),
+                        "cmd_vel_line_timeout_sec": ParameterValue(
+                            debug_monitor_cmd_vel_line_timeout_sec, value_type=float
+                        ),
+                        "yolo_detections_timeout_sec": ParameterValue(
+                            debug_monitor_yolo_detections_timeout_sec,
+                            value_type=float,
+                        ),
+                        "traffic_light_state_timeout_sec": ParameterValue(
+                            debug_monitor_traffic_light_state_timeout_sec,
+                            value_type=float,
+                        ),
+                        "decision_state_timeout_sec": ParameterValue(
+                            debug_monitor_decision_state_timeout_sec,
+                            value_type=float,
+                        ),
+                        "cmd_vel_timeout_sec": ParameterValue(
+                            debug_monitor_cmd_vel_timeout_sec, value_type=float
+                        ),
+                        "zero_twist_epsilon": ParameterValue(
+                            debug_monitor_zero_twist_epsilon, value_type=float
+                        ),
+                        "cmd_compare_epsilon": ParameterValue(
+                            debug_monitor_cmd_compare_epsilon, value_type=float
+                        ),
+                    }
+                ],
             ),
         ]
     )

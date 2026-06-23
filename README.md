@@ -42,6 +42,16 @@ decision_node
   <- /traffic_light_state
   -> /cmd_vel
   -> /decision_state
+
+debug_monitor_node (optional)
+  <- /cmd_vel_line
+  <- /path_state
+  <- /yolo/detections
+  <- /traffic_light_state
+  <- /decision_state
+  <- /cmd_vel
+  -> /debug/pipeline_state
+  -> /debug/pipeline_warnings
 ```
 
 핵심 규칙:
@@ -59,6 +69,9 @@ decision_node -> /cmd_vel
 src/
   csi_camera/    Jetson CSI 카메라 2개를 ROS Image 토픽으로 발행
   follower/       라인 검출 및 라인 추종 후보 속도 생성
+  traffic_light/  YOLO bbox와 상단 카메라 이미지로 신호등 상태 생성
+  decision/       라인/신호등 상태를 종합해 최종 /cmd_vel 생성
+  debug_monitor/  전체 pipeline topic 상태와 warning 요약
   yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의
   yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드
   yolo_debug/     YOLO bbox 디버그 및 UDP 스트리밍 노드

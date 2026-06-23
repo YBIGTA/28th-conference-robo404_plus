@@ -71,6 +71,32 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("follower_debug_draw_fps", default_value="True"),
             DeclareLaunchArgument("show_follower_debug_window", default_value="False"),
+            DeclareLaunchArgument("use_debug_monitor", default_value="False"),
+            DeclareLaunchArgument("debug_monitor_publish_rate_hz", default_value="2.0"),
+            DeclareLaunchArgument(
+                "debug_monitor_path_state_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_vel_line_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_yolo_detections_timeout_sec", default_value="1.0"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_traffic_light_state_timeout_sec", default_value="1.0"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_decision_state_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_vel_timeout_sec", default_value="0.5"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_zero_twist_epsilon", default_value="0.001"
+            ),
+            DeclareLaunchArgument(
+                "debug_monitor_cmd_compare_epsilon", default_value="0.001"
+            ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(perception_launch),
                 launch_arguments={
@@ -144,6 +170,34 @@ def generate_launch_description():
                     ),
                     "show_follower_debug_window": LaunchConfiguration(
                         "show_follower_debug_window"
+                    ),
+                    "use_debug_monitor": LaunchConfiguration("use_debug_monitor"),
+                    "debug_monitor_publish_rate_hz": LaunchConfiguration(
+                        "debug_monitor_publish_rate_hz"
+                    ),
+                    "debug_monitor_path_state_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_path_state_timeout_sec"
+                    ),
+                    "debug_monitor_cmd_vel_line_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_cmd_vel_line_timeout_sec"
+                    ),
+                    "debug_monitor_yolo_detections_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_yolo_detections_timeout_sec"
+                    ),
+                    "debug_monitor_traffic_light_state_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_traffic_light_state_timeout_sec"
+                    ),
+                    "debug_monitor_decision_state_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_decision_state_timeout_sec"
+                    ),
+                    "debug_monitor_cmd_vel_timeout_sec": LaunchConfiguration(
+                        "debug_monitor_cmd_vel_timeout_sec"
+                    ),
+                    "debug_monitor_zero_twist_epsilon": LaunchConfiguration(
+                        "debug_monitor_zero_twist_epsilon"
+                    ),
+                    "debug_monitor_cmd_compare_epsilon": LaunchConfiguration(
+                        "debug_monitor_cmd_compare_epsilon"
                     ),
                 }.items(),
             ),

@@ -57,7 +57,8 @@ target_pipeline:
 
   debug_monitor:
     node: "debug_monitor_node"
-    status: "planned"
+    status: "new"
+    launch_arg: "use_debug_monitor:=True"
     inputs:
       - "/cmd_vel_line"
       - "/path_state"
