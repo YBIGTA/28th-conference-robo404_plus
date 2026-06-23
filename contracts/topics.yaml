@@ -25,14 +25,17 @@ topics:
     description: "라인 추종 기준 후보 속도. 최종 주행 명령이 아니다."
 
   "/path_state":
-    type: "TBD"
+    type: "std_msgs/msg/String"
     status: "new"
     producer: "follower_node"
     consumers:
       - "decision_node"
     description: "라인 인식 상태"
-    candidate_fields:
-      - "line_visible"
+    allowed_values:
+      - "LINE_VISIBLE"
+      - "LINE_LOST"
+      - "FINAL_STOP"
+    future_fields:
       - "line_error_x"
       - "line_confidence"
       - "lost_duration"
@@ -47,14 +50,17 @@ topics:
     description: "YOLO 객체 검출 결과"
 
   "/traffic_light_state":
-    type: "TBD"
+    type: "std_msgs/msg/String"
     status: "new"
     producer: "traffic_light_node"
     consumers:
       - "decision_node"
     description: "신호등 상태"
-    candidate_fields:
-      - "state: UNKNOWN / RED / GREEN"
+    allowed_values:
+      - "UNKNOWN"
+      - "RED"
+      - "GREEN"
+    future_fields:
       - "confidence"
       - "detected_class_name"
       - "stamp"
@@ -70,17 +76,24 @@ topics:
       - "follower_node"
 
   "/decision_state":
-    type: "TBD"
+    type: "std_msgs/msg/String"
     status: "new"
     producer: "decision_node"
     consumers:
       - "debug"
       - "logger"
     description: "decision_node의 현재 판단 상태"
-    candidate_fields:
-      - "state: IDLE / FOLLOW_LINE / STOP_FOR_RED / WAIT_GREEN / LINE_LOST / FINAL_STOP"
+    allowed_values:
+      - "IDLE"
+      - "FOLLOW_LINE"
+      - "STOP_FOR_RED"
+      - "WAIT_GREEN"
+      - "LINE_LOST"
+      - "FINAL_STOP"
+    future_fields:
       - "reason"
       - "motion_enabled"
+      - "stamp"
 
   "/yolo/dbg_image":
     type: "sensor_msgs/msg/Image"

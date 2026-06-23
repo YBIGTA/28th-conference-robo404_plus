@@ -1,3 +1,8 @@
+path_states:
+  - "LINE_VISIBLE"
+  - "LINE_LOST"
+  - "FINAL_STOP"
+
 decision_states:
   - "IDLE"
   - "FOLLOW_LINE"
@@ -16,6 +21,9 @@ decision_rules:
     - state: "IDLE"
       command: "zero Twist"
       reason: "주행 비활성 상태"
+    - state: "FINAL_STOP"
+      command: "zero Twist"
+      reason: "최종 정지"
     - state: "LINE_LOST"
       command: "zero Twist"
       reason: "라인 유실"
@@ -28,10 +36,17 @@ decision_rules:
     - state: "FOLLOW_LINE"
       command: "pass /cmd_vel_line"
       reason: "라인 정상 인식 및 주행 가능"
-    - state: "FINAL_STOP"
-      command: "zero Twist"
-      reason: "최종 정지"
 
   unknown_traffic_light_policy:
     before_red_stop: "FOLLOW_LINE 유지"
     after_red_stop: "WAIT_GREEN 유지"
+
+  red_latch_policy:
+    on_red: "red_latched = true"
+    while_latched_without_green: "WAIT_GREEN 유지"
+    on_green_after_red: "red_latched = false, FOLLOW_LINE 복귀"
+
+  timeout_policy:
+    cmd_vel_line_timeout: "LINE_LOST처럼 zero Twist 발행"
+    path_state_timeout: "LINE_LOST처럼 zero Twist 발행"
+    traffic_light_state_timeout: "UNKNOWN처럼 처리"

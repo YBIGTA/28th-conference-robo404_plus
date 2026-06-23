@@ -48,7 +48,7 @@ nodes:
       - "/traffic_light_state"
 
   decision_node:
-    package: "TBD"
+    package: "decision"
     status: "new"
     responsibility:
       - "라인 추종 후보 속도, 라인 상태, 신호등 상태를 종합"
@@ -62,9 +62,11 @@ nodes:
       - "/cmd_vel"
       - "/decision_state"
     services:
-      candidates:
-        - "/start_driving"
-        - "/stop_driving"
+      add:
+        - name: "/start_driving"
+          type: "std_srvs/srv/Empty"
+        - name: "/stop_driving"
+          type: "std_srvs/srv/Empty"
 
   debug_node:
     package: "yolo_ros"
