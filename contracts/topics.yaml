@@ -98,8 +98,8 @@ topics:
 
   "/yolo/dbg_image":
     type: "sensor_msgs/msg/Image"
-    status: "existing"
+    status: "optional"
     producer: "debug_node"
     consumers:
       - "debug viewer"
-    description: "YOLO detection 결과가 그려진 디버그 이미지"
+    description: "YOLO detection 결과가 그려진 ROS 디버그 이미지. 기본 debug 출력은 UDP stream이며, 이 토픽은 publish_dbg_image:=True일 때만 발행한다."

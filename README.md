@@ -61,7 +61,7 @@ src/
   follower/       라인 검출 및 라인 추종 후보 속도 생성
   yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의
   yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드
-  yolo_ros/       YOLO 디버그 노드
+  yolo_debug/     YOLO bbox 디버그 및 UDP 스트리밍 노드
   yolo_bringup/   YOLO launch 파일 관리
 
 contracts/        구현 기준 계약서

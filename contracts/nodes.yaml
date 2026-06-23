@@ -112,17 +112,19 @@ nodes:
           type: "std_srvs/srv/Empty"
 
   debug_node:
-    package: "yolo_ros"
+    package: "yolo_debug"
     status: "changed"
     responsibility:
-      - "YOLO detection 결과를 이미지 위에 그려서 확인"
+      - "YOLO detection 결과를 이미지 위에 그려서 UDP H.264 stream으로 확인"
     inputs:
       - "/camera/rgb/image_raw"
       - "/yolo/detections"
     outputs:
-      keep:
+      optional_ros:
         - "/yolo/dbg_image"
-      remove_or_ignore:
+      network:
+        - "UDP H.264 RTP stream"
+      removed:
         - "/yolo/dgb_bb_markers"
         - "/yolo/dgb_kp_markers"
-    note: "1차 구조에서는 3D detection을 다루지 않으므로 3D marker 출력은 제거하거나 무시한다."
+    note: "use_debug:=True이면 UDP stream을 기본으로 켠다. /yolo/dbg_image는 publish_dbg_image:=True일 때만 발행한다."

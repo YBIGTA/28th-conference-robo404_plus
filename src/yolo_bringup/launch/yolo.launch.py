@@ -31,6 +31,15 @@ def generate_launch_description():
             DeclareLaunchArgument("imgsz_width", default_value="640"),
             DeclareLaunchArgument("max_det", default_value="100"),
             DeclareLaunchArgument("num_labels", default_value="80"),
+            DeclareLaunchArgument("publish_dbg_image", default_value="False"),
+            DeclareLaunchArgument("debug_stream_ip", default_value="127.0.0.1"),
+            DeclareLaunchArgument("debug_stream_port", default_value="5000"),
+            DeclareLaunchArgument("debug_stream_width", default_value="960"),
+            DeclareLaunchArgument("debug_stream_height", default_value="540"),
+            DeclareLaunchArgument("debug_stream_framerate", default_value="30"),
+            DeclareLaunchArgument("debug_stream_bitrate", default_value="4000000"),
+            DeclareLaunchArgument("debug_use_hw_encoder", default_value="True"),
+            DeclareLaunchArgument("debug_draw_fps", default_value="True"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(launch_file),
                 launch_arguments={
@@ -51,6 +60,33 @@ def generate_launch_description():
                     "imgsz_width": LaunchConfiguration("imgsz_width", default="640"),
                     "max_det": LaunchConfiguration("max_det", default="100"),
                     "num_labels": LaunchConfiguration("num_labels", default="80"),
+                    "publish_dbg_image": LaunchConfiguration(
+                        "publish_dbg_image", default="False"
+                    ),
+                    "debug_stream_ip": LaunchConfiguration(
+                        "debug_stream_ip", default="127.0.0.1"
+                    ),
+                    "debug_stream_port": LaunchConfiguration(
+                        "debug_stream_port", default="5000"
+                    ),
+                    "debug_stream_width": LaunchConfiguration(
+                        "debug_stream_width", default="960"
+                    ),
+                    "debug_stream_height": LaunchConfiguration(
+                        "debug_stream_height", default="540"
+                    ),
+                    "debug_stream_framerate": LaunchConfiguration(
+                        "debug_stream_framerate", default="30"
+                    ),
+                    "debug_stream_bitrate": LaunchConfiguration(
+                        "debug_stream_bitrate", default="4000000"
+                    ),
+                    "debug_use_hw_encoder": LaunchConfiguration(
+                        "debug_use_hw_encoder", default="True"
+                    ),
+                    "debug_draw_fps": LaunchConfiguration(
+                        "debug_draw_fps", default="True"
+                    ),
                 }.items(),
             )
         ]

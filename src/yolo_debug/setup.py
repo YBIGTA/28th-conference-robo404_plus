@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "yolo_ros"
+package_name = "yolo_debug"
 
 setup(
     name=package_name,
@@ -14,12 +14,12 @@ setup(
     zip_safe=True,
     maintainer="Miguel Ángel González Santamarta",
     maintainer_email="mgons@unileon.es",
-    description="YOLO for ROS 2",
+    description="YOLO debug visualization and headless stream node",
     license="GPL-3.0",
     extras_require={"test": ["pytest"]},
     entry_points={
         "console_scripts": [
-            "debug_node = yolo_ros.debug_node:main",
+            "debug_node = yolo_debug.debug_node:main",
         ],
     },
 )

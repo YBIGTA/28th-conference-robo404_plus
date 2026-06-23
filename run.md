@@ -133,15 +133,26 @@ ros2 launch yolo_bringup yolov8_trt.launch.py \
   namespace:=yolo
 ```
 
-debug image까지 보고 싶으면:
+SSH/headless Jetson에서 bbox debug 화면을 PC로 보내려면:
 
 ```bash
 ros2 launch yolo_bringup yolov8_trt.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
   input_image_topic:=/camera/rgb/image_raw \
   namespace:=yolo \
-  use_debug:=True
+  use_debug:=True \
+  debug_stream_ip:=<receiver_pc_ip>
 ```
+
+PC에서 수신:
+
+```bash
+gst-launch-1.0 -v udpsrc port=5000 \
+  caps="application/x-rtp,media=video,encoding-name=H264,payload=96" \
+  ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+```
+
+ROS image topic도 같이 보고 싶으면 `publish_dbg_image:=True`를 추가한다.
 
 확인:
 

@@ -140,10 +140,12 @@ yolo_jetson
 
 yolo_bringup
   YOLO 관련 launch 파일 관리
-  1차 목표에서는 TensorRT yolo_node와 선택적 debug_node 실행만 담당
+  TensorRT yolo_node와 선택적 yolo_debug/debug_node 실행 담당
 
-yolo_ros
-  YOLO debug_node만 유지
+yolo_debug
+  YOLO bbox debug_node 유지
+  use_debug:=True일 때 UDP H.264 stream 발행
+  /yolo/dbg_image는 publish_dbg_image:=True일 때만 선택 발행
   Python Ultralytics 기반 yolo_node, tracking_node, detect_3d_node는 제거
 ```
 
@@ -154,7 +156,7 @@ yolo_jetson의 /yolo/detections 타입:
   yolo_msgs/msg/DetectionArray
 ```
 
-기존 `yolo_ros` Python backend를 제거해도 `/yolo/detections` 계약은 유지한다.
+기존 Python YOLO backend를 제거해도 `/yolo/detections` 계약은 유지한다.
 
 ## 6. Contracts Folder
 
