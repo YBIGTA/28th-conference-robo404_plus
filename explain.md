@@ -133,31 +133,28 @@ yolo_msgs
   yolo_msgs/msg/Detection
   기타 YOLO 결과용 메시지 정의
 
-yolo_ros
-  Python 기반 YOLO 노드
-  yolo_node, debug_node, tracking_node, detect_3d_node 포함
-  1차 목표에서는 yolo_node와 debug_node 중심으로 사용
+yolo_jetson
+  Jetson Nano TensorRT 기반 YOLO 노드
+  yolo_node 포함
+  1차 목표에서는 /yolo/detections 발행만 담당
 
 yolo_bringup
   YOLO 관련 launch 파일 관리
-  1차 목표에서는 tracking, 3D 옵션을 정리할 예정
+  1차 목표에서는 TensorRT yolo_node와 선택적 debug_node 실행만 담당
 
-yolo_bridge
-  Jetson Nano / TensorRT 후보 구현
-  Nano 최적화 단계에서 검토할 패키지
+yolo_ros
+  YOLO debug_node만 유지
+  Python Ultralytics 기반 yolo_node, tracking_node, detect_3d_node는 제거
 ```
 
 주의할 점:
 
 ```text
-yolo_ros의 /yolo/detections 타입:
+yolo_jetson의 /yolo/detections 타입:
   yolo_msgs/msg/DetectionArray
-
-yolo_bridge의 /yolo/detections 후보 타입:
-  vision_msgs/msg/Detection2DArray
 ```
 
-둘을 동시에 쓰려면 토픽 타입 계약을 반드시 통일해야 한다. 1차 구조에서는 기존 `yolo_ros`와 `yolo_msgs/msg/DetectionArray` 기준으로 계약을 잡는다.
+기존 `yolo_ros` Python backend를 제거해도 `/yolo/detections` 계약은 유지한다.
 
 ## 6. Contracts Folder
 

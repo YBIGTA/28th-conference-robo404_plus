@@ -32,3 +32,8 @@ env/
 
 # personal context
 docs/
+robo/
+
+# model exclude
+src/yolo_jetson/models/*.onnx
+src/yolo_jetson/models/*.engine

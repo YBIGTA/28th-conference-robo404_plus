@@ -31,13 +31,11 @@ from rclpy.lifecycle import LifecycleState
 
 import message_filters
 from cv_bridge import CvBridge
-from ultralytics.utils.plotting import Annotator, colors
 
 from sensor_msgs.msg import Image
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from yolo_msgs.msg import BoundingBox2D
-from yolo_msgs.msg import KeyPoint2D
 from yolo_msgs.msg import KeyPoint3D
 from yolo_msgs.msg import Detection
 from yolo_msgs.msg import DetectionArray
@@ -294,15 +292,8 @@ class DebugNode(LifecycleNode):
 
         keypoints_msg = detection.keypoints
 
-        ann = Annotator(cv_image)
-
-        kp: KeyPoint2D
         for kp in keypoints_msg.data:
-            color_k = (
-                [int(x) for x in ann.kpt_color[kp.id - 1]]
-                if len(keypoints_msg.data) == 17
-                else colors(kp.id - 1)
-            )
+            color_k = self.keypoint_color(kp.id)
 
             cv2.circle(
                 cv_image,
@@ -323,27 +314,22 @@ class DebugNode(LifecycleNode):
                 cv2.LINE_AA,
             )
 
-        def get_pk_pose(kp_id: int) -> Tuple[int]:
-            for kp in keypoints_msg.data:
-                if kp.id == kp_id:
-                    return (int(kp.point.x), int(kp.point.y))
-            return None
-
-        for i, sk in enumerate(ann.skeleton):
-            kp1_pos = get_pk_pose(sk[0])
-            kp2_pos = get_pk_pose(sk[1])
-
-            if kp1_pos is not None and kp2_pos is not None:
-                cv2.line(
-                    cv_image,
-                    kp1_pos,
-                    kp2_pos,
-                    [int(x) for x in ann.limb_color[i]],
-                    thickness=2,
-                    lineType=cv2.LINE_AA,
-                )
-
         return cv_image
+
+    def keypoint_color(self, keypoint_id: int) -> Tuple[int]:
+        """
+        Generate a stable BGR color for a keypoint ID without depending on Ultralytics.
+
+        @param keypoint_id Keypoint ID from the detection message
+        @return BGR color tuple
+        """
+
+        rng = random.Random(keypoint_id)
+        return (
+            rng.randint(0, 255),
+            rng.randint(0, 255),
+            rng.randint(0, 255),
+        )
 
     def create_bb_marker(self, detection: Detection, color: Tuple[int]) -> Marker:
         """

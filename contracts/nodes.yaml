@@ -21,10 +21,10 @@ nodes:
       note: "추후 전체 주행 시작/정지는 decision_node 쪽으로 옮기는 것이 좋다."
 
   yolo_node:
-    package: "yolo_ros"
-    status: "existing"
+    package: "yolo_jetson"
+    status: "changed"
     responsibility:
-      - "Top Camera 영상에서 YOLO 객체 검출 수행"
+      - "Top Camera 영상에서 Jetson Nano TensorRT YOLO 객체 검출 수행"
       - "검출 결과를 /yolo/detections로 발행"
     inputs:
       - "/camera/rgb/image_raw"
@@ -33,6 +33,7 @@ nodes:
     services:
       existing:
         - "/yolo/enable"
+      removed:
         - "/yolo/set_classes"
     note: "신호등 RED/GREEN 의미 판단은 yolo_node가 아니라 traffic_light_node에서 처리한다."
 
