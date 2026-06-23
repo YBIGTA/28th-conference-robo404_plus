@@ -10,6 +10,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 from std_srvs.srv import Empty
 
 import numpy as np
@@ -69,6 +70,9 @@ just_seen_right_mark = False
 should_move = False
 right_mark_count = 0
 finalization_countdown = None
+
+PATH_LINE_VISIBLE = "LINE_VISIBLE"
+PATH_LINE_LOST = "LINE_LOST"
 
 
 def start_follower_callback(request, response):
@@ -216,6 +220,7 @@ def timer_callback():
 
         # plot the line centroid on the image
         cv2.circle(output, (line['x'], crop_h_start + line['y']), 5, (0,255,0), 7)
+        path_state = PATH_LINE_VISIBLE
 
     else:
         # There is no line in the image. 
@@ -224,6 +229,7 @@ def timer_callback():
             just_seen_line = False
             error = error * LOSS_FACTOR
         message.linear.x = 0.0
+        path_state = PATH_LINE_LOST
 
     if mark_side != None:
         print("mark_side: {}".format(mark_side))
@@ -271,7 +277,9 @@ def timer_callback():
             should_move = False
 
 
-    # Publish the message to 'cmd_vel'
+    # Publish the line-following candidate command.
+    path_state_publisher.publish(String(data=path_state))
+
     if should_move:
         publisher.publish(message)
     else:
@@ -285,7 +293,11 @@ def main():
     node = Node('follower')
 
     global publisher
-    publisher = node.create_publisher(Twist, '/cmd_vel', rclpy.qos.qos_profile_system_default)
+    publisher = node.create_publisher(Twist, '/cmd_vel_line', rclpy.qos.qos_profile_system_default)
+
+    global path_state_publisher
+    path_state_publisher = node.create_publisher(String, '/path_state', 10)
+
     subscription = node.create_subscription(Image, 'camera/image_raw',
                                             image_callback,
                                             rclpy.qos.qos_profile_sensor_data)
@@ -306,3 +318,4 @@ except (KeyboardInterrupt, rclpy.exceptions.ROSInterruptException):
     node.destroy_node()
     rclpy.shutdown()
     exit()
+    
