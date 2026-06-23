@@ -20,11 +20,15 @@
 
 ```text
 Bottom Camera
+  -> csi_camera/bottom_camera
+  -> /camera/image_raw
   -> follower_node
       -> /cmd_vel_line
       -> /path_state
 
 Top Camera
+  -> csi_camera/top_camera
+  -> /camera/rgb/image_raw
   -> yolo_node
       -> /yolo/detections
   -> traffic_light_node
@@ -53,6 +57,7 @@ decision_node -> /cmd_vel
 
 ```text
 src/
+  csi_camera/    Jetson CSI 카메라 2개를 ROS Image 토픽으로 발행
   follower/       라인 검출 및 라인 추종 후보 속도 생성
   yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의
   yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드

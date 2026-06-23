@@ -1,4 +1,44 @@
 nodes:
+  bottom_camera:
+    package: "csi_camera"
+    status: "new"
+    responsibility:
+      - "Jetson CSI sensor_id=0 카메라를 연다"
+      - "하단 라인 검출용 이미지를 ROS 토픽으로 발행한다"
+    inputs:
+      - "CSI camera sensor_id=0"
+    outputs:
+      - "/camera/image_raw"
+    parameters:
+      - "sensor_id"
+      - "capture_width"
+      - "capture_height"
+      - "output_width"
+      - "output_height"
+      - "framerate"
+      - "flip_method"
+      - "frame_id"
+
+  top_camera:
+    package: "csi_camera"
+    status: "new"
+    responsibility:
+      - "Jetson CSI sensor_id=1 카메라를 연다"
+      - "YOLO와 신호등 색상 판단용 이미지를 ROS 토픽으로 발행한다"
+    inputs:
+      - "CSI camera sensor_id=1"
+    outputs:
+      - "/camera/rgb/image_raw"
+    parameters:
+      - "sensor_id"
+      - "capture_width"
+      - "capture_height"
+      - "output_width"
+      - "output_height"
+      - "framerate"
+      - "flip_method"
+      - "frame_id"
+
   follower_node:
     package: "follower"
     status: "changed"

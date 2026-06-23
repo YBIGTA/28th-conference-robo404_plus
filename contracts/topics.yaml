@@ -1,16 +1,16 @@
 topics:
   "/camera/image_raw":
     type: "sensor_msgs/msg/Image"
-    status: "existing"
-    producer: "Bottom Camera"
+    status: "changed"
+    producer: "csi_camera/bottom_camera"
     consumers:
       - "follower_node"
     description: "라인 검출용 하단 카메라 이미지"
 
   "/camera/rgb/image_raw":
     type: "sensor_msgs/msg/Image"
-    status: "existing"
-    producer: "Top Camera"
+    status: "changed"
+    producer: "csi_camera/top_camera"
     consumers:
       - "yolo_node"
       - "debug_node"
