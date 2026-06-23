@@ -28,7 +28,7 @@ MIN_AREA = 500
 MIN_AREA_TRACK = 5000
 
 # Robot's speed when following the line
-LINEAR_SPEED = 0.2
+LINEAR_SPEED = 20.0
 
 # Proportional constant to be applied on speed when turning 
 # (Multiplied by the error value)
@@ -47,8 +47,8 @@ FINALIZATION_PERIOD = 4
 MAX_ERROR = 30
 
 # BGR values to filter only the selected color range
-lower_bgr_values = np.array([31,  42,  53])
-upper_bgr_values = np.array([255, 255, 255])
+lower_bgr_values = np.array([0, 0, 0])
+upper_bgr_values = np.array([30, 30, 30])
 
 def crop_size(height, width):
     """
@@ -300,7 +300,7 @@ def main():
 
     subscription = node.create_subscription(Image, 'camera/image_raw',
                                             image_callback,
-                                            rclpy.qos.qos_profile_sensor_data)
+                                            10)
 
     timer = node.create_timer(TIMER_PERIOD, timer_callback)
 
