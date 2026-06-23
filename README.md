@@ -20,11 +20,15 @@
 
 ```text
 Bottom Camera
+  -> csi_camera/bottom_camera
+  -> /camera/image_raw
   -> follower_node
       -> /cmd_vel_line
       -> /path_state
 
 Top Camera
+  -> csi_camera/top_camera
+  -> /camera/rgb/image_raw
   -> yolo_node
       -> /yolo/detections
   -> traffic_light_node
@@ -53,11 +57,12 @@ decision_node -> /cmd_vel
 
 ```text
 src/
+  csi_camera/    Jetson CSI 카메라 2개를 ROS Image 토픽으로 발행
   follower/       라인 검출 및 라인 추종 후보 속도 생성
   yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의
-  yolo_ros/       YOLO 검출 노드와 디버그 노드
+  yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드
+  yolo_debug/     YOLO bbox 디버그 및 UDP 스트리밍 노드
   yolo_bringup/   YOLO launch 파일 관리
-  yolo_bridge/    Jetson Nano / TensorRT 후보 구현
 
 contracts/        구현 기준 계약서
 docs/             설계 설명 문서

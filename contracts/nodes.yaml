@@ -1,4 +1,44 @@
 nodes:
+  bottom_camera:
+    package: "csi_camera"
+    status: "new"
+    responsibility:
+      - "Jetson CSI sensor_id=0 카메라를 연다"
+      - "하단 라인 검출용 이미지를 ROS 토픽으로 발행한다"
+    inputs:
+      - "CSI camera sensor_id=0"
+    outputs:
+      - "/camera/image_raw"
+    parameters:
+      - "sensor_id"
+      - "capture_width"
+      - "capture_height"
+      - "output_width"
+      - "output_height"
+      - "framerate"
+      - "flip_method"
+      - "frame_id"
+
+  top_camera:
+    package: "csi_camera"
+    status: "new"
+    responsibility:
+      - "Jetson CSI sensor_id=1 카메라를 연다"
+      - "YOLO와 신호등 색상 판단용 이미지를 ROS 토픽으로 발행한다"
+    inputs:
+      - "CSI camera sensor_id=1"
+    outputs:
+      - "/camera/rgb/image_raw"
+    parameters:
+      - "sensor_id"
+      - "capture_width"
+      - "capture_height"
+      - "output_width"
+      - "output_height"
+      - "framerate"
+      - "flip_method"
+      - "frame_id"
+
   follower_node:
     package: "follower"
     status: "changed"
@@ -21,10 +61,10 @@ nodes:
       note: "추후 전체 주행 시작/정지는 decision_node 쪽으로 옮기는 것이 좋다."
 
   yolo_node:
-    package: "yolo_ros"
-    status: "existing"
+    package: "yolo_jetson"
+    status: "changed"
     responsibility:
-      - "Top Camera 영상에서 YOLO 객체 검출 수행"
+      - "Top Camera 영상에서 Jetson Nano TensorRT YOLO 객체 검출 수행"
       - "검출 결과를 /yolo/detections로 발행"
     inputs:
       - "/camera/rgb/image_raw"
@@ -33,6 +73,7 @@ nodes:
     services:
       existing:
         - "/yolo/enable"
+      removed:
         - "/yolo/set_classes"
     note: "신호등 RED/GREEN 의미 판단은 yolo_node가 아니라 traffic_light_node에서 처리한다."
 
@@ -71,17 +112,19 @@ nodes:
           type: "std_srvs/srv/Empty"
 
   debug_node:
-    package: "yolo_ros"
+    package: "yolo_debug"
     status: "changed"
     responsibility:
-      - "YOLO detection 결과를 이미지 위에 그려서 확인"
+      - "YOLO detection 결과를 이미지 위에 그려서 UDP H.264 stream으로 확인"
     inputs:
       - "/camera/rgb/image_raw"
       - "/yolo/detections"
     outputs:
-      keep:
+      optional_ros:
         - "/yolo/dbg_image"
-      remove_or_ignore:
+      network:
+        - "UDP H.264 RTP stream"
+      removed:
         - "/yolo/dgb_bb_markers"
         - "/yolo/dgb_kp_markers"
-    note: "1차 구조에서는 3D detection을 다루지 않으므로 3D marker 출력은 제거하거나 무시한다."
+    note: "use_debug:=True이면 UDP stream을 기본으로 켠다. /yolo/dbg_image는 publish_dbg_image:=True일 때만 발행한다."
