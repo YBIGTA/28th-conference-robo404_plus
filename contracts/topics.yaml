@@ -14,6 +14,7 @@ topics:
     consumers:
       - "yolo_node"
       - "debug_node"
+      - "traffic_light_node"
     description: "YOLO 추론 및 디버그 시각화용 상단 카메라 이미지"
 
   "/cmd_vel_line":
@@ -47,7 +48,7 @@ topics:
     consumers:
       - "traffic_light_node"
       - "debug_node"
-    description: "YOLO 객체 검출 결과"
+    description: "YOLO 객체 검출 결과. 1차 traffic_light_node에서는 traffic light bbox 위치를 찾는 데 사용한다."
 
   "/traffic_light_state":
     type: "std_msgs/msg/String"

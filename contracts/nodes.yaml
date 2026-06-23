@@ -37,13 +37,15 @@ nodes:
     note: "신호등 RED/GREEN 의미 판단은 yolo_node가 아니라 traffic_light_node에서 처리한다."
 
   traffic_light_node:
-    package: "TBD"
+    package: "traffic_light"
     status: "new"
     responsibility:
-      - "/yolo/detections를 받아 신호등 상태로 변환"
+      - "/yolo/detections에서 traffic light bbox를 선택"
+      - "/camera/rgb/image_raw에서 bbox 영역 색상을 분석"
       - "UNKNOWN / RED / GREEN 상태 발행"
     inputs:
       - "/yolo/detections"
+      - "/camera/rgb/image_raw"
     outputs:
       - "/traffic_light_state"
 

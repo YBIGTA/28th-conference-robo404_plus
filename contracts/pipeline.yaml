@@ -34,9 +34,12 @@ target_pipeline:
       - "/yolo/detections"
 
   traffic_light:
-    producer: "yolo_node"
-    input_topic: "/yolo/detections"
     consumer: "traffic_light_node"
+    inputs:
+      - producer: "yolo_node"
+        topic: "/yolo/detections"
+      - producer: "Top Camera"
+        topic: "/camera/rgb/image_raw"
     node_outputs:
       - "/traffic_light_state"
 
