@@ -28,6 +28,8 @@ Top Camera
   -> yolo_node
       -> /yolo/detections
   -> traffic_light_node
+      <- /yolo/detections
+      <- /camera/rgb/image_raw
       -> /traffic_light_state
 
 decision_node

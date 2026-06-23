@@ -84,6 +84,8 @@ Top Camera
   -> yolo_node
       -> /yolo/detections
   -> traffic_light_node
+      <- /yolo/detections
+      <- /camera/rgb/image_raw
       -> /traffic_light_state
 
 decision_node
@@ -107,7 +109,9 @@ yolo_node
   raw detection 발행
 
 traffic_light_node
-  YOLO detection을 신호등 상태로 변환
+  YOLO detection에서 traffic light bbox 선택
+  RGB 이미지에서 bbox 영역 색상 분석
+  UNKNOWN / RED / GREEN 신호등 상태 발행
 
 decision_node
   라인 상태와 신호등 상태를 종합
@@ -199,6 +203,7 @@ yolo_node
 traffic_light_node
   input:
     /yolo/detections
+    /camera/rgb/image_raw
   output:
     /traffic_light_state
 
