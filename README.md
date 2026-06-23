@@ -63,6 +63,7 @@ src/
   yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드
   yolo_debug/     YOLO bbox 디버그 및 UDP 스트리밍 노드
   yolo_bringup/   YOLO launch 파일 관리
+  robo404_bringup/ 전체 파이프라인 launch 파일 관리
 
 contracts/        구현 기준 계약서
 docs/             설계 설명 문서
