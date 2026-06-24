@@ -1,0 +1,333 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="s_curve">
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so"/>
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.55 0.55 0.62 1</diffuse>
+      <specular>0.08 0.08 0.08 1</specular>
+      <attenuation>
+        <range>1000</range><constant>0.9</constant>
+        <linear>0.01</linear><quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.1 -0.3 -0.95</direction>
+    </light>
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <surface><friction><ode><mu>100</mu><mu2>50</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script></material>
+        </visual>
+      </link>
+    </model>
+<model name="lane_0">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>3.0000 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>1.5000 0.0000 0.0005 0 0 0.0000</pose>
+</model>
+<model name="lane_1">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>3.1960 0.0096 0.0005 0 0 0.0982</pose>
+</model>
+<model name="lane_2">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>3.5806 0.0861 0.0005 0 0 0.2945</pose>
+</model>
+<model name="lane_3">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>3.9428 0.2362 0.0005 0 0 0.4909</pose>
+</model>
+<model name="lane_4">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>4.2688 0.4540 0.0005 0 0 0.6872</pose>
+</model>
+<model name="lane_5">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>4.5460 0.7312 0.0005 0 0 0.8836</pose>
+</model>
+<model name="lane_6">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>4.7638 1.0572 0.0005 0 0 1.0799</pose>
+</model>
+<model name="lane_7">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>4.9139 1.4194 0.0005 0 0 1.2763</pose>
+</model>
+<model name="lane_8">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>4.9904 1.8040 0.0005 0 0 1.4726</pose>
+</model>
+<model name="lane_9">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>1.5000 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.0000 2.7500 0.0005 0 0 1.5708</pose>
+</model>
+<model name="lane_10">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.0096 3.6960 0.0005 0 0 4.6142</pose>
+</model>
+<model name="lane_11">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.0861 4.0806 0.0005 0 0 4.4179</pose>
+</model>
+<model name="lane_12">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.2362 4.4428 0.0005 0 0 4.2215</pose>
+</model>
+<model name="lane_13">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.4540 4.7688 0.0005 0 0 4.0252</pose>
+</model>
+<model name="lane_14">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>5.7312 5.0460 0.0005 0 0 3.8288</pose>
+</model>
+<model name="lane_15">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>6.0572 5.2638 0.0005 0 0 3.6325</pose>
+</model>
+<model name="lane_16">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>6.4194 5.4139 0.0005 0 0 3.4361</pose>
+</model>
+<model name="lane_17">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>0.4123 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>6.8040 5.4904 0.0005 0 0 3.2398</pose>
+</model>
+<model name="lane_18">
+  <static>true</static>
+  <link name="link">
+    <visual name="visual">
+      <geometry><box><size>4.0000 0.1200 0.001</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Black</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>9.0000 5.5000 0.0005 0 0 0.0000</pose>
+</model>
+<model name="traffic_light_pole">
+  <static>true</static>
+  <link name="link">
+    <collision name="collision">
+      <geometry><cylinder><radius>0.03</radius><length>0.700</length></cylinder></geometry>
+    </collision>
+    <visual name="visual">
+      <geometry><cylinder><radius>0.03</radius><length>0.700</length></cylinder></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/DarkGrey</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>9.0000 4.7000 0.3500 0 0 0</pose>
+</model>
+<include>
+  <uri>model://stop_light</uri>
+  <name>traffic_light</name>
+  <pose>9.0000 4.7000 1.1000 0 0 -1.5708</pose>
+</include>
+<model name="obstacle_box">
+  <static>true</static>
+  <link name="link">
+    <collision name="collision">
+      <geometry><box><size>0.500 0.300 0.500</size></box></geometry>
+    </collision>
+    <visual name="visual">
+      <geometry><box><size>0.500 0.300 0.500</size></box></geometry>
+      <material><script>
+        <uri>file://media/materials/scripts/gazebo.material</uri>
+        <name>Gazebo/Orange</name>
+      </script></material>
+    </visual>
+  </link>
+  <pose>10.5000 5.5000 0.2500 0 0 0</pose>
+</model>
+<include>
+  <uri>model://jersey_barrier</uri>
+  <name>barrier_1</name>
+  <pose>1.000 -1.500 0.000 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://stop_sign</uri>
+  <name>sign_1</name>
+  <pose>8.000 7.000 0.000 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://postbox</uri>
+  <name>postbox_1</name>
+  <pose>6.000 1.000 0.000 0 0 0.000</pose>
+</include>
+  </world>
+</sdf>

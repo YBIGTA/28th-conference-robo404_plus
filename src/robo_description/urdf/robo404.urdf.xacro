@@ -33,7 +33,7 @@
   <!-- camera placement -->
   <xacro:property name="cam_x" value="${chassis_length/2 - 0.01}" />
   <xacro:property name="cam_z" value="0.06"  />
-  <xacro:property name="cam_pitch" value="0.5" />   <!-- look slightly down for the line -->
+  <xacro:property name="cam_pitch" value="0.2" />   <!-- look slightly down for the line -->
 
   <!-- ======================= Materials ======================= -->
   <material name="acrylic"><color rgba="0.85 0.92 1.0 0.4"/></material>

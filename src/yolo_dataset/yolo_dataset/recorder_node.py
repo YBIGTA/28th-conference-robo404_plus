@@ -47,7 +47,7 @@ class RecorderNode(Node):
         self.declare_parameter("image_topic", "/camera/image_raw")
         self.declare_parameter("camera_info_topic", "/camera/camera_info")
         self.declare_parameter("cmd_vel_topic", "/cmd_vel")
-        self.declare_parameter("model_states_topic", "/gazebo/model_states")
+        self.declare_parameter("model_states_topic", "/model_states")
         self.declare_parameter("light_state_topic", "/traffic_light/state")
         self.declare_parameter("line_offset_topic", "/line_offset")
         self.declare_parameter("robot_model_name", "robo404")
@@ -63,8 +63,12 @@ class RecorderNode(Node):
         self._load_objects_config(g("objects_config"))
         self.writer = DatasetWriter(self.out_dir, self.class_names)
 
-        from cv_bridge import CvBridge
-        self.bridge = CvBridge()
+        try:
+            from cv_bridge import CvBridge
+            self.bridge = CvBridge()
+        except (ImportError, SystemError):
+            self.bridge = None
+            self.get_logger().warn("cv_bridge unavailable - using numpy fallback")
         self.K = None
         self.model_states = None
         self.action = {"linear_x": 0.0, "angular_z": 0.0}
@@ -135,7 +139,12 @@ class RecorderNode(Node):
         if T_cam_world is None:
             return
 
-        img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        if self.bridge is not None:
+            img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        else:
+            img = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)
+            if msg.encoding == "rgb8":
+                img = img[:, :, ::-1]
         h, w = img.shape[:2]
         detections = self._label_objects(T_cam_world, w, h)
 

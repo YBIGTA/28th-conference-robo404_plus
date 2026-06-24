@@ -1,0 +1,179 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="bright_outdoor">
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.95 0.95 0.90 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.3 0.2 -0.9</direction>
+    </light>
+
+    <!-- White ground -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <surface><friction><ode><mu>100</mu><mu2>50</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/White</name>
+          </script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Track: straight 7m, then angled, then straight 5m -->
+    <model name="lane_segment_1">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>7.0 0.1 0.001</size></box></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Black</name>
+          </script></material>
+        </visual>
+      </link>
+      <pose>3.5 0.0 0.0005 0 0 0</pose>
+    </model>
+
+    <model name="lane_segment_2">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>2.5 0.1 0.001</size></box></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Black</name>
+          </script></material>
+        </visual>
+      </link>
+      <pose>8.0 0.75 0.0005 0 0 0.5404</pose>
+    </model>
+
+    <model name="lane_segment_3">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>5.0 0.1 0.001</size></box></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Black</name>
+          </script></material>
+        </visual>
+      </link>
+      <pose>11.8 1.5 0.0005 0 0 0</pose>
+    </model>
+
+    <!-- Custom traffic light (tall pole, large head) -->
+    <model name="traffic_light">
+      <static>true</static>
+      <link name="pole">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.05</radius><length>0.5</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.05</radius><length>0.5</length></cylinder></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script></material>
+        </visual>
+        <pose>0 0 0.25 0 0 0</pose>
+      </link>
+      <link name="head">
+        <collision name="collision">
+          <geometry><box><size>0.22 0.22 0.75</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.22 0.22 0.75</size></box></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Black</name>
+          </script></material>
+        </visual>
+        <pose>0 0 0.875 0 0 0</pose>
+      </link>
+      <link name="red_light">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.07</radius><length>0.02</length></cylinder></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Red</name>
+          </script></material>
+        </visual>
+        <pose>0 0.111 0.95 1.5708 0 0</pose>
+      </link>
+      <link name="yellow_light">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.07</radius><length>0.02</length></cylinder></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Yellow</name>
+          </script></material>
+        </visual>
+        <pose>0 0.111 0.75 1.5708 0 0</pose>
+      </link>
+      <link name="green_light">
+        <visual name="visual">
+          <geometry><cylinder><radius>0.07</radius><length>0.02</length></cylinder></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Green</name>
+          </script></material>
+        </visual>
+        <pose>0 0.111 0.55 1.5708 0 0</pose>
+      </link>
+      <pose>7.0 -0.7 0.0 0 0 1.5708</pose>
+    </model>
+
+    <!-- Obstacle: red box on segment 3 -->
+    <model name="obstacle_box">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+          <material><script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Red</name>
+          </script></material>
+        </visual>
+      </link>
+      <pose>13.0 1.5 0.2 0 0 0</pose>
+    </model>
+
+    <!-- Distractors: construction cones -->
+    <include>
+      <uri>model://construction_cone</uri>
+      <name>cone_1</name>
+      <pose>5.0 1.2 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://construction_cone</uri>
+      <name>cone_2</name>
+      <pose>10.0 -0.8 0 0 0 0.3</pose>
+    </include>
+    <include>
+      <uri>model://construction_cone</uri>
+      <name>cone_3</name>
+      <pose>12.0 2.5 0 0 0 0.7</pose>
+    </include>
+
+  </world>
+</sdf>

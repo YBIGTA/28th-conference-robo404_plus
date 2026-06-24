@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(grep \"^material \" /usr/share/gazebo-11/media/materials/scripts/gazebo.material | head -50)",
+      "Read(//usr/share/gazebo-11/media/materials/scripts/**)",
+      "Read(//home/jiucai/.gazebo/models/stop_light/**)",
+      "Read(//home/jiucai/.gazebo/models/construction_cone/**)",
+      "Read(//home/jiucai/.gazebo/models/lamp_post/**)",
+      "Read(//home/jiucai/.gazebo/models/fire_hydrant/**)",
+      "Bash(ls ~/.gazebo/models/ | sort)",
+      "Read(//home/jiucai/.gazebo/models/**)",
+      "Bash(pkill -f gzserver)",
+      "Bash(pkill -f gzclient)",
+      "Bash(pkill -f ros2)"
+    ]
+  }
+}

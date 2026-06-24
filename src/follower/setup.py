@@ -25,7 +25,11 @@ setup(
     entry_points={
         'console_scripts': [
             'follower_node = follower.follower_node:main',
-            'tester = follower.test_topic:main'
+            'tester = follower.test_topic:main',
+            'line_tracker_node = follower.line_tracker_node:main',
+            'yolo_detector_node = follower.yolo_detector_node:main',
+            'safety_arbiter_node = follower.safety_arbiter_node:main',
+            'wasd_teleop_node = follower.wasd_teleop_node:main'
         ],
     },
 )
