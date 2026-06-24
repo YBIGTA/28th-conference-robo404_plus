@@ -1,0 +1,18 @@
+material TrackGround/Image
+{
+  technique
+  {
+    pass
+    {
+      ambient 0.9 0.9 0.9 1.0
+      diffuse 0.9 0.9 0.9 1.0
+      specular 0.1 0.1 0.1 1.0 12.5
+
+      texture_unit
+      {
+        texture track.png
+        filtering trilinear
+      }
+    }
+  }
+}

@@ -30,7 +30,7 @@ def test_yolo_detector_black_input():
 
 def test_yolo_detector_fallback_obstacle_box():
     """Test fallback mode detection of a red obstacle box."""
-    detector = YoloDetector(fallback_to_mock=True)
+    detector = YoloDetector(force_mock=True)
     
     # Create white image background
     img = np.ones((480, 640, 3), dtype=np.uint8) * 255
@@ -63,7 +63,7 @@ def test_yolo_detector_fallback_obstacle_box():
 
 def test_yolo_detector_fallback_traffic_light():
     """Test fallback mode detection of a yellow traffic light."""
-    detector = YoloDetector(fallback_to_mock=True)
+    detector = YoloDetector(force_mock=True)
     
     # Create white image background
     img = np.ones((480, 640, 3), dtype=np.uint8) * 255

@@ -9,20 +9,26 @@ except ImportError:
     ULTRALYTICS_AVAILABLE = False
 
 class YoloDetector:
-    def __init__(self, model_path="yolov8n.pt", fallback_to_mock=True):
+    def __init__(self, model_path="yolov8n.pt", fallback_to_mock=True, force_mock=False):
         """
         Decoupled YOLOv8 Object Detector.
-        
+
         Args:
             model_path (str): Path to the YOLOv8 weights file.
-            fallback_to_mock (bool): If True, falls back to a custom OpenCV color-based obstacle detector 
+            fallback_to_mock (bool): If True, falls back to a custom OpenCV color-based obstacle detector
                                      if ultralytics fails to load or import.
+            force_mock (bool): If True, always use the OpenCV color-based fallback detector,
+                               regardless of whether ultralytics is available. Useful for
+                               deterministic testing of the fallback path.
         """
         self.logger = logging.getLogger("YoloDetector")
         self.model = None
         self.fallback_mode = False
-        
-        if ULTRALYTICS_AVAILABLE:
+
+        if force_mock:
+            self.fallback_mode = True
+            self.logger.warning("force_mock=True; using Mock/CV2-based obstacle detection.")
+        elif ULTRALYTICS_AVAILABLE:
             try:
                 self.model = YOLO(model_path)
                 self.logger.info(f"YOLOv8 model successfully loaded from {model_path}.")

@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<!-- Low-profile traffic light (RED on). Bulbs sit around z=0.25 m so the
+     robot's top camera (z=0.12 m, pitched ~9 deg up) sees them head-on. -->
+<sdf version="1.6">
+  <model name="traffic_light_red">
+    <static>true</static>
+    <link name="link">
+      <!-- Post -->
+      <visual name="post">
+        <pose>0 0 0.09 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.015</radius>
+            <length>0.18</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+      <collision name="post_collision">
+        <pose>0 0 0.09 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.015</radius>
+            <length>0.18</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Housing (vertical 3-light stack) -->
+      <visual name="housing">
+        <pose>0 0 0.26 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.07 0.07 0.20</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.15 1</ambient>
+          <diffuse>0.15 0.15 0.15 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Red light (ON - emissive) -->
+      <visual name="red_light">
+        <pose>0.036 0 0.32 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.028</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>1 0 0 1</ambient>
+          <diffuse>1 0 0 1</diffuse>
+          <specular>1 0 0 1</specular>
+          <emissive>1 0 0 1</emissive>
+        </material>
+      </visual>
+
+      <!-- Yellow light (OFF) -->
+      <visual name="yellow_light">
+        <pose>0.036 0 0.26 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.028</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.15 0.12 0.0 1</ambient>
+          <diffuse>0.15 0.12 0.0 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Green light (OFF) -->
+      <visual name="green_light">
+        <pose>0.036 0 0.20 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.028</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.0 0.12 0.0 1</ambient>
+          <diffuse>0.0 0.12 0.0 1</diffuse>
+        </material>
+      </visual>
+
+    </link>
+  </model>
+</sdf>

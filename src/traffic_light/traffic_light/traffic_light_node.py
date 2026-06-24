@@ -38,9 +38,11 @@ class TrafficLightNode(Node):
         self.declare_parameter("min_red_ratio", 0.03)
         self.declare_parameter("min_green_ratio", 0.03)
         self.declare_parameter("red_green_margin", 1.2)
+        self.declare_parameter("simulation_mode", False)
 
         self.config = self.load_config()
         self.image_timeout_sec = self.get_parameter("image_timeout_sec").value
+        self.simulation_mode = self.get_parameter("simulation_mode").value
 
         self.bridge = CvBridge()
         self.latest_image = None
@@ -93,6 +95,30 @@ class TrafficLightNode(Node):
     def image_callback(self, msg):
         self.latest_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         self.latest_image_time = self.now_seconds()
+
+        if self.simulation_mode:
+            h, w = self.latest_image.shape[:2]
+            # Create a mock detection candidate covering the upper 60% of the image
+            mock_detection = DetectionCandidate(
+                class_name="traffic_light",
+                score=1.0,
+                center_x=float(w / 2.0),
+                center_y=float(h * 0.3),
+                size_x=float(w),
+                size_y=float(h * 0.6),
+            )
+            # Temporarily use lower ratio threshold for simulation mode whole-image analysis
+            orig_min_red = self.config.min_red_ratio
+            orig_min_green = self.config.min_green_ratio
+            self.config.min_red_ratio = 0.0005
+            self.config.min_green_ratio = 0.0005
+
+            state = analyze_traffic_light([mock_detection], self.latest_image, self.config)
+
+            self.config.min_red_ratio = orig_min_red
+            self.config.min_green_ratio = orig_min_green
+
+            self.publish_state(state)
 
     def detections_callback(self, msg):
         if not self.has_recent_image():
