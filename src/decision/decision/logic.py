@@ -83,7 +83,7 @@ def decide(inputs):
         return DecisionResult(DECISION_LINE_LOST, False, red_latched)
 
     if path_state == PATH_LINE_LOST:
-        return DecisionResult(DECISION_LINE_LOST, False, red_latched)
+        return DecisionResult(DECISION_LINE_LOST, True, red_latched)
 
     if traffic_light_state == TRAFFIC_RED:
         return DecisionResult(DECISION_STOP_FOR_RED, False, red_latched)

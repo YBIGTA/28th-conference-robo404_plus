@@ -84,12 +84,17 @@ class SimYoloNode(Node):
         if self.publish_debug_image:
             self.dbg_pub = self.create_publisher(Image, "/yolo/dbg_image", 10)
 
+        self.frame_count = 0
         self.create_subscription(
             Image, image_topic, self.image_callback, qos_profile_sensor_data
         )
         self.get_logger().info(f"sim_yolo_node ready (subscribed to {image_topic})")
 
     def image_callback(self, msg):
+        self.frame_count += 1
+        if self.frame_count % 6 != 0:
+            return
+
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         results = self.model.predict(frame, conf=self.conf, verbose=False)
 

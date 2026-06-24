@@ -26,19 +26,19 @@
     <include>
       <uri>model://traffic_light_red</uri>
       <name>light_red_1</name>
-      <pose>0.3920 0.3985 0 0 0 2.8050</pose>
+      <pose>-0.0358 0.6200 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <uri>model://traffic_light_green</uri>
       <name>light_green_1</name>
-      <pose>2.9185 -0.8169 0 0 0 1.6933</pose>
+      <pose>1.0146 -0.2097 0 0 0 1.2936</pose>
     </include>
 
     <include>
       <uri>model://traffic_light_red</uri>
       <name>light_red_2</name>
-      <pose>0.2153 -2.1324 0 0 0 0.0000</pose>
+      <pose>-0.1841 -0.6798 0 0 0 0.0000</pose>
     </include>
 
     <gui fullscreen="0">

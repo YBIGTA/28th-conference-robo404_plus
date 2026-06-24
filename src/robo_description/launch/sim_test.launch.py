@@ -78,6 +78,7 @@ def generate_launch_description():
     yaw = LaunchConfiguration("yaw")
     linear_speed = LaunchConfiguration("linear_speed")
     kp = LaunchConfiguration("kp")
+    kd = LaunchConfiguration("kd")
 
     robot_description = {
         "robot_description": ParameterValue(
@@ -139,6 +140,7 @@ def generate_launch_description():
                 "show_debug_window": False,
                 "linear_speed": linear_speed,
                 "kp": kp,
+                "kd": kd,
             }
         ],
     )
@@ -160,8 +162,8 @@ def generate_launch_description():
         ],
     )
 
-    # simulation_mode is OFF: the real finetuned YOLO drives the classifier
-    # via /yolo/detections (class names red/green map directly to states).
+    # simulation_mode is ON: use robust HSV fallback on the top camera feed
+    # to reliably detect visual spheres in the Gazebo simulation.
     traffic_light_node = Node(
         package="traffic_light",
         executable="traffic_light_node",
@@ -169,7 +171,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {
-                "simulation_mode": False,
+                "simulation_mode": True,
                 "use_sim_time": use_sim_time,
             }
         ],
@@ -219,8 +221,9 @@ def generate_launch_description():
         DeclareLaunchArgument("y_pose", default_value="0.4"),
         DeclareLaunchArgument("z_pose", default_value="0.05"),
         DeclareLaunchArgument("yaw", default_value=start_yaw),
-        DeclareLaunchArgument("linear_speed", default_value="0.30"),
-        DeclareLaunchArgument("kp", default_value="0.025"),
+        DeclareLaunchArgument("linear_speed", default_value="0.20"),
+        DeclareLaunchArgument("kp", default_value="0.035"),
+        DeclareLaunchArgument("kd", default_value="0.005"),
         robot_state_publisher,
         gzserver,
         gzclient,

@@ -56,8 +56,11 @@ class DemoOrchestrator(Node):
         super().__init__("demo_orchestrator")
         self.declare_parameter("start_delay_sec", 4.0)
         self.declare_parameter("min_stop_sec", 1.5)
+        self.declare_parameter("switch_cooldown_sec", 8.0)
         self.start_delay = float(self.get_parameter("start_delay_sec").value)
         self.min_stop = float(self.get_parameter("min_stop_sec").value)
+        self.switch_cooldown = float(self.get_parameter("switch_cooldown_sec").value)
+        self.last_switch_time = -1e9
 
         with open(GREEN_MODEL_SDF) as f:
             self.green_sdf = f.read()
@@ -74,6 +77,7 @@ class DemoOrchestrator(Node):
         )
 
         self.start_cli = self.create_client(Empty, "/start_driving")
+        self.start_follower_cli = self.create_client(Empty, "/start_follower")
         self.del_cli = self.create_client(DeleteEntity, "/delete_entity")
         self.spawn_cli = self.create_client(SpawnEntity, "/spawn_entity")
 
@@ -90,23 +94,34 @@ class DemoOrchestrator(Node):
         self.decision_state = msg.data
 
     def _call(self, cli, req, what):
-        if not cli.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error(f"service for {what} unavailable")
+        # Fire-and-forget: never block the executor from inside a timer
+        # callback (nested spins stall the single-threaded executor in Foxy).
+        if not cli.service_is_ready():
+            self.get_logger().warn(f"service for {what} not ready yet")
             return None
-        fut = cli.call_async(req)
-        rclpy.spin_until_future_complete(self, fut, timeout_sec=5.0)
-        return fut.result()
+        return cli.call_async(req)
 
     def _tick(self):
         now = time.time()
         if not self.started:
             if now - self.t0 >= self.start_delay:
-                self.get_logger().info("Calling /start_driving")
+                if not (self.start_follower_cli.service_is_ready()
+                        and self.start_cli.service_is_ready()):
+                    return  # keep waiting for services to come up
+                self.get_logger().info("Calling /start_follower + /start_driving")
+                self._call(self.start_follower_cli, Empty.Request(), "start_follower")
                 self._call(self.start_cli, Empty.Request(), "start_driving")
                 self.started = True
             return
 
         if not self.red_queue:
+            return
+
+        # Cooldown after a switch: give the car time to detect green and drive
+        # clear of the light before we consider the *next* red, so one stop
+        # can't pop two lights off the queue.
+        if now - self.last_switch_time < self.switch_cooldown:
+            self.stop_since = None
             return
 
         stopped = self.decision_state in ("STOP_FOR_RED", "WAIT_GREEN")
@@ -115,6 +130,7 @@ class DemoOrchestrator(Node):
                 self.stop_since = now
             elif now - self.stop_since >= self.min_stop:
                 self._switch_next_red()
+                self.last_switch_time = now
                 self.stop_since = None
         else:
             self.stop_since = None

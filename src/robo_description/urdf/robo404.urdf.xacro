@@ -34,7 +34,7 @@
   <!-- bottom camera placement (looks down at the line) -->
   <xacro:property name="bot_cam_x" value="${chassis_length/2 - 0.01}" />
   <xacro:property name="bot_cam_z" value="0.06"  />
-  <xacro:property name="bot_cam_pitch" value="0.35" />   <!-- ~20 deg down -->
+  <xacro:property name="bot_cam_pitch" value="0.52" />   <!-- ~30 deg down -->
 
   <!-- top camera placement (looks forward/slightly up for traffic lights) -->
   <xacro:property name="top_cam_x" value="0.0" />

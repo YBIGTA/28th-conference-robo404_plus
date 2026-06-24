@@ -12,35 +12,38 @@ The world maps this image onto the ground plane centered at the world
 origin, so world_xy = image_xy - GROUND_M/2  (see gen_world.py).
 
 The course, in driving order from START:
-  1. entry straight       (left -> right)
-  2. S-curve              (down-left arc, then down-right arc)
-  3. long straight        (downward)
-  4. 180 deg U-turn       (right-hand half circle)
-  5. return straight      (upward)
+  Stadium / "playground" loop matching the real-world track:
+  1. top straight         (left -> right)
+  2. right U-turn         (180 deg, heading +X -> -X)
+  3. bottom straight      (right -> left)
+  4. left U-turn          (180 deg, heading -X -> +X, closes the loop)
 """
 import math
 
-GROUND_M = 8.0            # ground plane is GROUND_M x GROUND_M metres
-LINE_WIDTH_M = 0.06       # painted line width (wide enough for the sim camera)
+GROUND_M = 4.0            # ground plane is GROUND_M x GROUND_M metres
+LINE_WIDTH_M = 0.04       # painted line width (~real tape width at this scale)
 
 
 # The course is built by integrating heading over a sequence of primitives.
 # Each primitive is (length_m, total_turn_rad): turn=0 is straight, +turn is a
-# left turn (CCW in image frame), -turn is a right turn. Because heading is
-# continuous, every junction is tangent-continuous (smooth S-curve & U-turn).
-START_XY = (1.2, 2.2)     # image-frame start point (upper-left)
+# left turn (CCW in image frame), -turn is a right turn. Heading is continuous,
+# so every junction is tangent-continuous and the loop closes smoothly.
+#
+# True real-scale 400 m-track shape: ~1 m straights with the standard
+# straight/radius ratio (84.39 / 36.5 ~= 2.31) -> R_TURN ~= 0.43 m.
+#   STRAIGHT = 1.0 m, R_TURN = 0.43 m
+#   overall track ~= (STRAIGHT + 2*R_TURN) x (2*R_TURN) = 1.86 x 0.86 m
+# Placed on a 4x4 m ground, roughly centered.
+R_TURN = 0.43
+STRAIGHT = 1.0
+START_XY = (1.4, 1.6)     # on the top straight, near its left end
 START_HEADING = 0.0       # +X (driving to the right)
 
-# Course laid out to fill the 8x8 m ground with well-separated features:
-#   entry straight -> S-curve -> straight -> U-turn -> long return straight.
-# Radii are generous (~0.9-1.0 m) so the small robot tracks the line cleanly.
 PRIMITIVES = [
-    (1.6, 0.0),                  # 1. entry straight (top, heading +X)
-    (1.4, +math.pi / 2),         # 2a. S: bend down (turn right/CW in image = +Y)
-    (1.4, -math.pi / 2),         # 2b. S: bend back to +X  -> clear S shape
-    (1.8, 0.0),                  # 2c. straight after the S
-    (math.pi * 0.9, +math.pi),   # 3. 180 deg U-turn (half circle, r=0.9), now -X
-    (4.6, 0.0),                  # 4. long return straight (heading -X)
+    (STRAIGHT, 0.0),                 # 1. top straight (heading +X)
+    (math.pi * R_TURN, +math.pi),    # 2. right U-turn (180 deg, curves down) -> -X
+    (STRAIGHT, 0.0),                 # 3. bottom straight (heading -X)
+    (math.pi * R_TURN, +math.pi),    # 4. left U-turn (180 deg, curves up) -> closes loop
 ]
 STEP_M = 0.02             # integration step
 

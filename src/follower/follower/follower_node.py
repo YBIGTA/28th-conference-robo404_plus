@@ -40,7 +40,7 @@ KP = 1.5/100
 LOSS_FACTOR = 1.2
 
 # Send messages every $TIMER_PERIOD seconds
-TIMER_PERIOD = 0.06
+TIMER_PERIOD = 0.0333
 
 # When about to end the track, move for ~$FINALIZATION_PERIOD more seconds
 FINALIZATION_PERIOD = 4
@@ -61,18 +61,21 @@ def crop_size(height, width):
     """
     ## Update these values to your liking.
 
-    return (1*height//3, height, width//4, 3*width//4)
+    # Wider horizontal band so the line stays in view through curves.
+    return (1*height//3, height, width//6, 5*width//6)
 
 
 # Global vars. initial values
 image_input = 0
 image_header = None
 error = 0
+last_error = 0
 just_seen_line = False
 just_seen_right_mark = False
 should_move = False
 right_mark_count = 0
 finalization_countdown = None
+KD = 0.0
 publish_debug_image = False
 publish_mask_image = False
 show_debug_window = False
@@ -122,13 +125,13 @@ def stop_follower_callback(request, response):
 def image_callback(msg):
     """
     Function to be called whenever a new Image message arrives.
-    Update the global variable 'image_input'
+    Update the global variable 'image_input' and trigger control logic.
     """
     global image_input
     global image_header
     image_input = bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
     image_header = msg.header
-    # node.get_logger().info('Received image')
+    timer_callback()
 
 def update_fps():
     """
@@ -359,50 +362,47 @@ def get_contour_data(mask, out):
     # get a list of contours
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-    mark = {}
-    line = {}
-
+    # Filter contours by minimum area and calculate moments
+    valid_contours = []
     for contour in contours:
-        
         M = cv2.moments(contour)
-        # Search more about Image Moments on Wikipedia :)
-
         if M['m00'] > MIN_AREA:
-        # if countor.area > MIN_AREA:
+            valid_contours.append((M['m00'], M, contour))
 
-            if (M['m00'] > MIN_AREA_TRACK):
-                # Contour is part of the track
-                line['x'] = crop_w_start + int(M["m10"]/M["m00"])
-                line['y'] = int(M["m01"]/M["m00"])
+    # Sort contours by area descending: the largest is always the main track line
+    valid_contours.sort(key=lambda x: x[0], reverse=True)
 
-                # plot the area in light blue
-                cv2.drawContours(out, contour, -1, (255,255,0), 1) 
-                cv2.putText(out, str(M['m00']), (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])),
-                    cv2.FONT_HERSHEY_PLAIN, 2, (255,255,0), 2)
-            
-            else:
-                # Contour is a track mark
-                if (not mark) or (mark['y'] > int(M["m01"]/M["m00"])):
-                    # if there are more than one mark, consider only 
-                    # the one closest to the robot 
-                    mark['y'] = int(M["m01"]/M["m00"])
-                    mark['x'] = crop_w_start + int(M["m10"]/M["m00"])
+    line = {}
+    mark = {}
 
-                    # plot the area in pink
-                    cv2.drawContours(out, contour, -1, (255,0,255), 1) 
-                    cv2.putText(out, str(M['m00']), (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])),
-                        cv2.FONT_HERSHEY_PLAIN, 2, (255,0,255), 2)
+    if len(valid_contours) > 0:
+        area, M, contour = valid_contours[0]
+        line['x'] = crop_w_start + int(M["m10"]/M["m00"])
+        line['y'] = int(M["m01"]/M["m00"])
+        
+        # Plot the line area in light blue
+        cv2.drawContours(out, [contour], -1, (255, 255, 0), 1)
+        cv2.putText(out, f"Line:{int(area)}", (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])),
+                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 0), 2)
 
+        # Any secondary contour closest to the robot is treated as a track mark
+        for area, M, contour in valid_contours[1:]:
+            if (not mark) or (int(M["m01"]/M["m00"]) > mark['y']):
+                mark['y'] = int(M["m01"]/M["m00"])
+                mark['x'] = crop_w_start + int(M["m10"]/M["m00"])
+                
+                # Plot the mark area in pink
+                cv2.drawContours(out, [contour], -1, (255, 0, 255), 1)
+                cv2.putText(out, f"Mark:{int(area)}", (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])),
+                            cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 0, 255), 2)
 
     if mark and line:
-    # if both contours exist
         if mark['x'] > line['x']:
             mark_side = "right"
         else:
             mark_side = "left"
     else:
         mark_side = None
-
 
     return (line, mark_side)
 
@@ -413,7 +413,7 @@ def timer_callback():
     so it can follow the contour
     """
 
-    global error
+    global error, last_error
     global image_input
     global just_seen_line
     global just_seen_right_mark
@@ -496,7 +496,23 @@ def timer_callback():
 
     
     # Determine the speed to turn and get the line in the center of the camera.
-    message.angular.z = float(error) * -KP
+    if path_state == PATH_LINE_VISIBLE:
+        # PD control when line is visible
+        derivative = error - last_error
+        last_error = error
+        angular_z = float(error) * -KP + float(derivative) * -KD
+        # Cap maximum angular velocity during tracking to prevent wild turns
+        MAX_ANGULAR_VEL = 3.0
+        message.angular.z = max(-MAX_ANGULAR_VEL, min(MAX_ANGULAR_VEL, angular_z))
+    else:
+        # Search mode when line is lost: spin slower on the spot
+        derivative = 0
+        last_error = error
+        angular_z = float(error) * -KP
+        # Cap searching velocity to a stable spin speed
+        SEARCH_ANGULAR_VEL = 1.2
+        message.angular.z = max(-SEARCH_ANGULAR_VEL, min(SEARCH_ANGULAR_VEL, angular_z))
+
     print("Error: {} | Angular Z: {}, ".format(error, message.angular.z))
     
 
@@ -539,7 +555,7 @@ def timer_callback():
 
 def main():
     rclpy.init()
-    global node
+    global node, LINEAR_SPEED, KP
     node = Node('follower')
 
     node.declare_parameter('publish_debug_image', False)
@@ -554,6 +570,14 @@ def main():
     node.declare_parameter('stream_bitrate', 4000000)
     node.declare_parameter('use_hw_encoder', True)
     node.declare_parameter('draw_fps', True)
+    # Drive tuning (defaults match the real-robot constants; override in sim).
+    node.declare_parameter('linear_speed', LINEAR_SPEED)
+    node.declare_parameter('kp', KP)
+    node.declare_parameter('kd', 0.0)
+    LINEAR_SPEED = float(node.get_parameter('linear_speed').value)
+    KP = float(node.get_parameter('kp').value)
+    global KD
+    KD = float(node.get_parameter('kd').value)
 
     global publish_debug_image
     publish_debug_image = bool(node.get_parameter('publish_debug_image').value)
@@ -627,7 +651,8 @@ def main():
         rclpy.qos.qos_profile_sensor_data,
     )
 
-    timer = node.create_timer(TIMER_PERIOD, timer_callback)
+    # Run control loop directly inside image_callback to minimize latency
+    # timer = node.create_timer(TIMER_PERIOD, timer_callback)
 
     start_service = node.create_service(
         Empty,

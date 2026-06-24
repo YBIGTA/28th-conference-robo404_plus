@@ -121,6 +121,9 @@ class TrafficLightNode(Node):
             self.publish_state(state)
 
     def detections_callback(self, msg):
+        if self.simulation_mode:
+            return
+
         if not self.has_recent_image():
             self.publish_state(STATE_UNKNOWN)
             return

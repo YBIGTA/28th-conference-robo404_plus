@@ -37,4 +37,4 @@ robo/
 # model exclude
 src/yolo_jetson/models/*.onnx
 src/yolo_jetson/models/*.engine
-yolov8n.pt
+*.pt

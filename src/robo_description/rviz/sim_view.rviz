@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /RobotModel1
       Splitter Ratio: 0.5
-    Tree Height: 400
+    Tree Height: 276
 Visualization Manager:
   Class: ""
   Displays:
@@ -15,32 +15,149 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
       Name: Grid
       Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
       Plane: XY
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
       Description Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        bottom_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        bottom_camera_optical_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        front_left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_right_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        top_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        top_camera_optical_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Name: RobotModel
-      Visual Enabled: true
+      TF Prefix: ""
+      Update Interval: 0
       Value: true
+      Visual Enabled: true
     - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        bottom_camera_link:
+          Value: true
+        bottom_camera_optical_link:
+          Value: true
+        front_left_wheel:
+          Value: true
+        front_right_wheel:
+          Value: true
+        odom:
+          Value: true
+        rear_left_wheel:
+          Value: true
+        rear_right_wheel:
+          Value: true
+        top_camera_link:
+          Value: true
+        top_camera_optical_link:
+          Value: true
+      Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
+      Tree:
+        odom:
+          base_footprint:
+            base_link:
+              bottom_camera_link:
+                bottom_camera_optical_link:
+                  {}
+              top_camera_link:
+                top_camera_optical_link:
+                  {}
+            front_left_wheel:
+              {}
+            front_right_wheel:
+              {}
+            rear_left_wheel:
+              {}
+            rear_right_wheel:
+              {}
+      Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
       Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
       Name: TopCam_YOLO
+      Normalize Range: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -50,7 +167,11 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/Image
       Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
       Name: BottomCam_Line
+      Normalize Range: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -58,6 +179,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /camera/image_raw
       Value: true
+  Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: odom
@@ -65,26 +187,44 @@ Visualization Manager:
   Name: root
   Tools:
     - Class: rviz_default_plugins/MoveCamera
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
   Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
       Distance: 3.5
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
-        X: 0.4
-        Y: 2.0
-        Z: 0.0
+        X: 0.4000000059604645
+        Y: 2
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
       Name: Current View
-      Pitch: 0.4
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.4000000059604645
       Target Frame: base_link
-      Yaw: 2.2
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 2.200000047683716
     Saved: ~
 Window Geometry:
+  BottomCam_Line:
+    collapsed: false
   Displays:
     collapsed: false
   Height: 900
-  Width: 1600
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f7000002e8fc0200000003fb0000001c0042006f00740074006f006d00430061006d005f004c0069006e0065010000006e000000a70000004a00fffffffb000000160054006f007000430061006d005f0059004f004c004f0100000121000000a70000004a00fffffffb000000100044006900730070006c00610079007301000001d4000001820000018200ffffff0000043d000002e800000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   TopCam_YOLO:
     collapsed: false
-  BottomCam_Line:
-    collapsed: false
+  Width: 1600
+  X: 194
+  Y: 104
