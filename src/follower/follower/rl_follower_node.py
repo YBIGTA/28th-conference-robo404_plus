@@ -58,11 +58,16 @@ class RlFollowerNode(Node):
         # camera drivers) or 'reliable' (the Gazebo sim camera publishes
         # RELIABLE, so a best_effort subscriber receives nothing there).
         self.declare_parameter('image_reliability', 'best_effort')
+        # Max linear speed the policy's [0,1] output maps to. The real robot's
+        # safe range is ~0.05 m/s (default); raise it for sim visualization to
+        # watch the car drive faster without retraining.
+        self.declare_parameter('max_linear_speed', 0.05)
 
         self.model_path = self.get_parameter('model_path').value
         self.min_area = self.get_parameter('min_area').value
         self.should_move = self.get_parameter('start_enabled').value
         self.image_reliability = self.get_parameter('image_reliability').value
+        self.max_linear_speed = float(self.get_parameter('max_linear_speed').value)
         
         self.get_logger().info(f"Loading ONNX policy from: {self.model_path}")
         
@@ -209,9 +214,9 @@ class RlFollowerNode(Node):
             # Map action to physical velocities.
             # Policy was trained in sim with linear -> [0.0, 0.35] m/s, but the
             # real robot's usable range is ~0.03-0.05 m/s, so we proportionally
-            # rescale the linear output into [0.0, 0.05]. Angular is left at the
-            # trained [-3.0, 3.0] rad/s range.
-            linear_act = (action[0] + 1.0) / 2.0 * 0.05
+            # rescale the linear output into [0.0, max_linear_speed]. Angular is
+            # left at the trained [-3.0, 3.0] rad/s range.
+            linear_act = (action[0] + 1.0) / 2.0 * self.max_linear_speed
             angular_act = action[1] * 3.0
             
             cmd_vel_msg.linear.x = float(linear_act)
