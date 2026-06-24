@@ -54,10 +54,15 @@ class RlFollowerNode(Node):
         self.declare_parameter('model_path', '/home/jiucai/28th-conference-robo404_plus/models/sac_robo404.onnx')
         self.declare_parameter('min_area', 500)
         self.declare_parameter('start_enabled', False)
-        
+        # Camera QoS reliability: 'best_effort' (default, correct for most real
+        # camera drivers) or 'reliable' (the Gazebo sim camera publishes
+        # RELIABLE, so a best_effort subscriber receives nothing there).
+        self.declare_parameter('image_reliability', 'best_effort')
+
         self.model_path = self.get_parameter('model_path').value
         self.min_area = self.get_parameter('min_area').value
         self.should_move = self.get_parameter('start_enabled').value
+        self.image_reliability = self.get_parameter('image_reliability').value
         
         self.get_logger().info(f"Loading ONNX policy from: {self.model_path}")
         
@@ -81,11 +86,19 @@ class RlFollowerNode(Node):
         self.vel_pub = self.create_publisher(Twist, '/cmd_vel_line', 10)
         self.state_pub = self.create_publisher(String, '/path_state', 10)
         
+        if self.image_reliability == 'reliable':
+            image_qos = rclpy.qos.QoSProfile(
+                reliability=rclpy.qos.ReliabilityPolicy.RELIABLE,
+                history=rclpy.qos.HistoryPolicy.KEEP_LAST,
+                depth=10,
+            )
+        else:
+            image_qos = rclpy.qos.qos_profile_sensor_data
         self.image_sub = self.create_subscription(
             Image,
             '/camera/image_raw',
             self.image_callback,
-            rclpy.qos.qos_profile_sensor_data
+            image_qos
         )
         
         self.odom_sub = self.create_subscription(
@@ -193,8 +206,12 @@ class RlFollowerNode(Node):
             outputs = self.session.run(None, inputs)
             action = outputs[0][0]
             
-            # Map action: linear -> [0.0, 0.35], angular -> [-3.0, 3.0]
-            linear_act = (action[0] + 1.0) / 2.0 * 0.35
+            # Map action to physical velocities.
+            # Policy was trained in sim with linear -> [0.0, 0.35] m/s, but the
+            # real robot's usable range is ~0.03-0.05 m/s, so we proportionally
+            # rescale the linear output into [0.0, 0.05]. Angular is left at the
+            # trained [-3.0, 3.0] rad/s range.
+            linear_act = (action[0] + 1.0) / 2.0 * 0.05
             angular_act = action[1] * 3.0
             
             cmd_vel_msg.linear.x = float(linear_act)
