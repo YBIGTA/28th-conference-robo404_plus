@@ -1,34 +1,14 @@
 nodes:
-  bottom_camera:
+  camera:
     package: "csi_camera"
     status: "new"
     responsibility:
-      - "Jetson CSI sensor_id=0 카메라를 연다"
-      - "하단 라인 검출용 이미지를 ROS 토픽으로 발행한다"
+      - "Jetson CSI 카메라 하나를 연다"
+      - "라인 검출, YOLO, 신호등 색상 판단용 이미지를 ROS 토픽으로 발행한다"
     inputs:
-      - "CSI camera sensor_id=0"
+      - "CSI camera sensor_id"
     outputs:
       - "/camera/image_raw"
-    parameters:
-      - "sensor_id"
-      - "capture_width"
-      - "capture_height"
-      - "output_width"
-      - "output_height"
-      - "framerate"
-      - "flip_method"
-      - "frame_id"
-
-  top_camera:
-    package: "csi_camera"
-    status: "new"
-    responsibility:
-      - "Jetson CSI sensor_id=1 카메라를 연다"
-      - "YOLO와 신호등 색상 판단용 이미지를 ROS 토픽으로 발행한다"
-    inputs:
-      - "CSI camera sensor_id=1"
-    outputs:
-      - "/camera/rgb/image_raw"
     parameters:
       - "sensor_id"
       - "capture_width"
@@ -43,7 +23,7 @@ nodes:
     package: "follower"
     status: "changed"
     responsibility:
-      - "Bottom Camera 영상에서 라인 검출"
+      - "카메라 영상에서 라인 검출"
       - "라인 기준 주행 후보 속도 생성"
       - "라인 상태 생성"
     inputs:
@@ -69,6 +49,7 @@ nodes:
       - "use_hw_encoder"
       - "draw_fps"
       - "show_debug_window"
+      - "image_topic"
     services:
       existing:
         - "/start_follower"
@@ -79,10 +60,10 @@ nodes:
     package: "yolo_jetson"
     status: "changed"
     responsibility:
-      - "Top Camera 영상에서 Jetson Nano TensorRT YOLO 객체 검출 수행"
+      - "카메라 영상에서 Jetson Nano TensorRT YOLO 객체 검출 수행"
       - "검출 결과를 /yolo/detections로 발행"
     inputs:
-      - "/camera/rgb/image_raw"
+      - "/camera/image_raw"
     outputs:
       - "/yolo/detections"
     services:
@@ -97,13 +78,15 @@ nodes:
     status: "new"
     responsibility:
       - "/yolo/detections에서 traffic light bbox를 선택"
-      - "/camera/rgb/image_raw에서 bbox 영역 색상을 분석"
+      - "/camera/image_raw에서 bbox 영역 색상을 분석"
       - "UNKNOWN / RED / GREEN 상태 발행"
     inputs:
       - "/yolo/detections"
-      - "/camera/rgb/image_raw"
+      - "/camera/image_raw"
     outputs:
       - "/traffic_light_state"
+    parameters:
+      - "image_topic"
 
   decision_node:
     package: "decision"
@@ -132,7 +115,7 @@ nodes:
     responsibility:
       - "YOLO detection 결과를 이미지 위에 그려서 UDP H.264 stream으로 확인"
     inputs:
-      - "/camera/rgb/image_raw"
+      - "/camera/image_raw"
       - "/yolo/detections"
     outputs:
       optional_ros:

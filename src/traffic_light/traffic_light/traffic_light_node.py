@@ -38,9 +38,11 @@ class TrafficLightNode(Node):
         self.declare_parameter("min_red_ratio", 0.03)
         self.declare_parameter("min_green_ratio", 0.03)
         self.declare_parameter("red_green_margin", 1.2)
+        self.declare_parameter("image_topic", "/camera/image_raw")
 
         self.config = self.load_config()
         self.image_timeout_sec = self.get_parameter("image_timeout_sec").value
+        self.image_topic = self.get_parameter("image_topic").value
 
         self.bridge = CvBridge()
         self.latest_image = None
@@ -55,7 +57,7 @@ class TrafficLightNode(Node):
 
         self.create_subscription(
             Image,
-            "/camera/rgb/image_raw",
+            self.image_topic,
             self.image_callback,
             qos_profile_sensor_data,
         )

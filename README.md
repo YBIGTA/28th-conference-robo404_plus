@@ -19,21 +19,18 @@
 ## Target Pipeline
 
 ```text
-Bottom Camera
-  -> csi_camera/bottom_camera
+CSI Camera
+  -> csi_camera/camera
   -> /camera/image_raw
   -> follower_node
       -> /cmd_vel_line
       -> /path_state
-
-Top Camera
-  -> csi_camera/top_camera
-  -> /camera/rgb/image_raw
   -> yolo_node
       -> /yolo/detections
+
   -> traffic_light_node
       <- /yolo/detections
-      <- /camera/rgb/image_raw
+      <- /camera/image_raw
       -> /traffic_light_state
 
 decision_node
@@ -67,9 +64,9 @@ decision_node -> /cmd_vel
 
 ```text
 src/
-  csi_camera/    Jetson CSI 카메라 2개를 ROS Image 토픽으로 발행
+  csi_camera/    Jetson CSI 카메라를 ROS Image 토픽으로 발행
   follower/       라인 검출 및 라인 추종 후보 속도 생성
-  traffic_light/  YOLO bbox와 상단 카메라 이미지로 신호등 상태 생성
+  traffic_light/  YOLO bbox와 카메라 이미지로 신호등 상태 생성
   decision/       라인/신호등 상태를 종합해 최종 /cmd_vel 생성
   debug_monitor/  전체 pipeline topic 상태와 warning 요약
   yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의

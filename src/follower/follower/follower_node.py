@@ -544,6 +544,7 @@ def main():
 
     node.declare_parameter('publish_debug_image', False)
     node.declare_parameter('publish_mask_image', False)
+    node.declare_parameter('image_topic', '/camera/image_raw')
     node.declare_parameter('show_debug_window', False)
     node.declare_parameter('enable_udp_stream', False)
     node.declare_parameter('stream_host', "127.0.0.1")
@@ -560,6 +561,8 @@ def main():
 
     global publish_mask_image
     publish_mask_image = bool(node.get_parameter('publish_mask_image').value)
+
+    image_topic = node.get_parameter('image_topic').value
 
     global show_debug_window
     show_debug_window = bool(node.get_parameter('show_debug_window').value)
@@ -622,7 +625,7 @@ def main():
 
     subscription = node.create_subscription(
         Image,
-        'camera/image_raw',
+        image_topic,
         image_callback,
         rclpy.qos.qos_profile_sensor_data,
     )
@@ -640,17 +643,18 @@ def main():
         stop_follower_callback,
     )
 
-    rclpy.spin(node)
-    close_stream_writer()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, rclpy.exceptions.ROSInterruptException):
+        pass
+    finally:
+        empty_message = Twist()
+        publisher.publish(empty_message)
+        close_stream_writer()
+        node.destroy_node()
+        rclpy.shutdown()
 
-try:
+
+if __name__ == '__main__':
     main()
-except (KeyboardInterrupt, rclpy.exceptions.ROSInterruptException):
-    empty_message = Twist()
-    publisher.publish(empty_message)
-    close_stream_writer()
-
-    node.destroy_node()
-    rclpy.shutdown()
-    exit()
     

@@ -18,7 +18,7 @@ def generate_launch_description():
         [
             DeclareLaunchArgument("engine_path", default_value=""),
             DeclareLaunchArgument(
-                "input_image_topic", default_value="/camera/rgb/image_raw"
+                "input_image_topic", default_value="/camera/image_raw"
             ),
             DeclareLaunchArgument("namespace", default_value="yolo"),
             DeclareLaunchArgument("use_debug", default_value="False"),
@@ -45,7 +45,7 @@ def generate_launch_description():
                 launch_arguments={
                     "engine_path": LaunchConfiguration("engine_path", default=""),
                     "input_image_topic": LaunchConfiguration(
-                        "input_image_topic", default="/camera/rgb/image_raw"
+                        "input_image_topic", default="/camera/image_raw"
                     ),
                     "namespace": LaunchConfiguration("namespace", default="yolo"),
                     "use_debug": LaunchConfiguration("use_debug", default="False"),

@@ -5,20 +5,18 @@
 최종 흐름:
 
 ```text
-Bottom Camera
+CSI Camera
   -> /camera/image_raw
   -> follower_node
       -> /cmd_vel_line
       -> /path_state
 
-Top Camera
-  -> /camera/rgb/image_raw
   -> yolo_jetson/yolo_node
       -> /yolo/detections
 
 traffic_light_node
   <- /yolo/detections
-  <- /camera/rgb/image_raw
+  <- /camera/image_raw
   -> /traffic_light_state
 
 decision_node
@@ -39,6 +37,43 @@ debug_monitor_node (optional)
   -> /debug/pipeline_warnings
 ```
 
+## 0. PC에서 Jetson으로 옮기기
+
+현재 변경사항은 커밋되지 않은 작업 트리에 있으므로, 당장 실험할 때는 `git pull`보다 `rsync`로 소스만 옮긴다. `build/`, `install/`, `log/`, `robo/` 같은 로컬 산출물/보관 폴더는 Jetson으로 보내지 않는다.
+
+Jetson에서 받을 디렉터리가 없으면 먼저 만든다.
+
+```bash
+ssh <jetson_user>@<jetson_ip>
+mkdir -p /home/lee/Desktop/28th-conference-robo404_plus
+```
+
+PC에서 실행:
+
+```bash
+cd /home/lee/Desktop/28th-conference-robo404_plus
+
+rsync -av \
+  README.md run.md contracts src \
+  <jetson_user>@<jetson_ip>:/home/lee/Desktop/28th-conference-robo404_plus/
+```
+
+네트워크 복사가 어렵다면 tar 파일로 옮긴다.
+
+```bash
+cd /home/lee/Desktop/28th-conference-robo404_plus
+tar -czf /tmp/robo404_src.tgz README.md run.md contracts src
+scp /tmp/robo404_src.tgz <jetson_user>@<jetson_ip>:/tmp/
+```
+
+Jetson에서 압축 해제:
+
+```bash
+mkdir -p /home/lee/Desktop/28th-conference-robo404_plus
+cd /home/lee/Desktop/28th-conference-robo404_plus
+tar -xzf /tmp/robo404_src.tgz
+```
+
 ## 1. 전제
 
 이 레포는 카메라 이미지 입력부터 최종 `/cmd_vel` 출력까지 담당한다.
@@ -49,7 +84,7 @@ debug_monitor_node (optional)
 Jetson Nano
 CUDA / TensorRT / OpenCV
 ROS 2 workspace 환경
-CSI Camera 2개가 nvarguscamerasrc로 접근 가능한 상태
+CSI Camera 1개가 nvarguscamerasrc로 접근 가능한 상태
 Robot base가 /cmd_vel을 구독하는 상태
 ```
 
@@ -88,6 +123,16 @@ source install/setup.bash
 
 ## 4. 전체 파이프라인 실행
 
+권장 실험 순서:
+
+```text
+1. single_csi.launch.py로 /camera/image_raw가 나오는지 확인
+2. yolov8_trt.launch.py로 /yolo/detections가 나오는지 확인
+3. perception.launch.py로 /traffic_light_state까지 확인
+4. full_pipeline.launch.py를 use_debug_monitor:=True로 실행
+5. /start_follower, /start_driving 서비스를 호출해 실제 주행 시작
+```
+
 기본 실행:
 
 ```bash
@@ -96,15 +141,13 @@ source install/setup.bash
 
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1
+  camera_sensor_id:=0
 ```
 
 이 launch는 아래 노드들을 함께 실행한다.
 
 ```text
-csi_camera/bottom_camera
-csi_camera/top_camera
+csi_camera/camera
 yolo_jetson/yolo_node
 traffic_light_node
 follower_node
@@ -116,17 +159,15 @@ decision_node
 기본 연결:
 
 ```text
-sensor_id=0 -> /camera/image_raw     -> follower_node
-sensor_id=1 -> /camera/rgb/image_raw -> yolo_jetson/yolo_node + traffic_light_node
+sensor_id=0 -> /camera/image_raw -> follower_node + yolo_jetson/yolo_node + traffic_light_node
 ```
 
-카메라가 반대로 잡히면 launch 인자만 바꾼다.
+다른 CSI 포트의 카메라를 쓰려면 launch 인자만 바꾼다.
 
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=1 \
-  top_sensor_id:=0
+  camera_sensor_id:=1
 ```
 
 SSH/headless Jetson에서 bbox debug 화면을 PC로 보내려면:
@@ -134,8 +175,7 @@ SSH/headless Jetson에서 bbox debug 화면을 PC로 보내려면:
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1 \
+  camera_sensor_id:=0 \
   use_debug:=True \
   debug_stream_ip:=<receiver_pc_ip>
 ```
@@ -155,8 +195,7 @@ Follower line debug image를 같이 보려면:
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1 \
+  camera_sensor_id:=0 \
   publish_follower_debug_image:=True
 ```
 
@@ -165,8 +204,7 @@ Follower line debug 화면을 UDP H.264 stream으로 보려면:
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1 \
+  camera_sensor_id:=0 \
   enable_follower_debug_stream:=True \
   follower_debug_stream_ip:=<receiver_pc_ip> \
   follower_debug_stream_port:=5001
@@ -185,8 +223,7 @@ Follower threshold mask까지 보려면:
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1 \
+  camera_sensor_id:=0 \
   publish_follower_debug_image:=True \
   publish_follower_mask_image:=True
 ```
@@ -196,8 +233,7 @@ ros2 launch robo404_bringup full_pipeline.launch.py \
 ```bash
 ros2 launch robo404_bringup full_pipeline.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1 \
+  camera_sensor_id:=0 \
   use_debug_monitor:=True
 ```
 
@@ -227,7 +263,6 @@ full_pipeline.launch.py는 노드만 실행한다.
 
 ```bash
 ros2 topic hz /camera/image_raw
-ros2 topic hz /camera/rgb/image_raw
 ros2 topic info /yolo/detections
 ros2 topic echo /traffic_light_state
 ros2 topic echo /path_state
@@ -253,38 +288,35 @@ rqt_image_view /follower/mask_image
 cd /home/lee/Desktop/28th-conference-robo404_plus
 source install/setup.bash
 
-ros2 launch csi_camera dual_csi.launch.py \
-  bottom_sensor_id:=0 \
-  top_sensor_id:=1
+ros2 launch csi_camera single_csi.launch.py \
+  sensor_id:=0 \
+  image_topic:=/camera/image_raw
 ```
 
 기본 연결:
 
 ```text
-sensor_id=0 -> /camera/image_raw     -> follower_node
-sensor_id=1 -> /camera/rgb/image_raw -> yolo_jetson/yolo_node
+sensor_id=0 -> /camera/image_raw -> follower_node + yolo_jetson/yolo_node + traffic_light_node
 ```
 
-카메라가 반대로 잡히면 launch 인자만 바꾼다.
+다른 CSI 포트의 카메라를 쓰려면 launch 인자만 바꾼다.
 
 ```bash
-ros2 launch csi_camera dual_csi.launch.py \
-  bottom_sensor_id:=1 \
-  top_sensor_id:=0
+ros2 launch csi_camera single_csi.launch.py \
+  sensor_id:=1 \
+  image_topic:=/camera/image_raw
 ```
 
 확인:
 
 ```bash
 ros2 topic list | grep camera
-ros2 topic hz /camera/rgb/image_raw
 ros2 topic hz /camera/image_raw
 ```
 
 필수 토픽:
 
 ```text
-/camera/rgb/image_raw
 /camera/image_raw
 ```
 
@@ -298,7 +330,7 @@ source install/setup.bash
 
 ros2 launch yolo_bringup yolov8_trt.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  input_image_topic:=/camera/rgb/image_raw \
+  input_image_topic:=/camera/image_raw \
   namespace:=yolo
 ```
 
@@ -307,7 +339,7 @@ SSH/headless Jetson에서 bbox debug 화면을 PC로 보내려면:
 ```bash
 ros2 launch yolo_bringup yolov8_trt.launch.py \
   engine_path:=/home/lee/models/yolov8n.engine \
-  input_image_topic:=/camera/rgb/image_raw \
+  input_image_topic:=/camera/image_raw \
   namespace:=yolo \
   use_debug:=True \
   debug_stream_ip:=<receiver_pc_ip>
@@ -507,7 +539,7 @@ deserializeCudaEngine 실패
 
 ```text
 /yolo/detections에 traffic light class가 있는지 확인한다.
-/camera/rgb/image_raw가 정상 발행되는지 확인한다.
+/camera/image_raw가 정상 발행되는지 확인한다.
 신호등 bbox가 너무 작거나 색상 threshold에 안 들어올 수 있다.
 ```
 
@@ -517,7 +549,7 @@ deserializeCudaEngine 실패
 Jetson Nano에서 nvarguscamerasrc가 동작하는지 확인한다.
 sensor_id 0/1이 실제 카메라 연결과 맞는지 확인한다.
 다른 프로세스가 같은 CSI 카메라를 이미 열고 있지 않은지 확인한다.
-필요하면 bottom_sensor_id/top_sensor_id 또는 flip_method launch 인자를 바꾼다.
+필요하면 camera_sensor_id 또는 camera_flip_method launch 인자를 바꾼다.
 ```
 
 ### /cmd_vel이 계속 zero인 경우

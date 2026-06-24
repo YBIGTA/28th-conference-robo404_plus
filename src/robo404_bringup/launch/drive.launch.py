@@ -7,6 +7,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
+    follower_image_topic = LaunchConfiguration("follower_image_topic")
     publish_follower_debug_image = LaunchConfiguration("publish_follower_debug_image")
     publish_follower_mask_image = LaunchConfiguration("publish_follower_mask_image")
     show_follower_debug_window = LaunchConfiguration("show_follower_debug_window")
@@ -56,6 +57,9 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "follower_image_topic", default_value="/camera/image_raw"
+            ),
             DeclareLaunchArgument(
                 "publish_follower_debug_image", default_value="False"
             ),
@@ -113,6 +117,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {
+                        "image_topic": follower_image_topic,
                         "publish_debug_image": ParameterValue(
                             publish_follower_debug_image, value_type=bool
                         ),

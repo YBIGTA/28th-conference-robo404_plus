@@ -17,25 +17,22 @@ def _launch_file(package_name, launch_file_name):
 
 
 def generate_launch_description():
-    csi_launch = _launch_file("csi_camera", "dual_csi.launch.py")
+    csi_launch = _launch_file("csi_camera", "single_csi.launch.py")
     yolo_launch = _launch_file("yolo_bringup", "yolov8_trt.launch.py")
 
     return LaunchDescription(
         [
             DeclareLaunchArgument("engine_path", default_value=""),
-            DeclareLaunchArgument("bottom_sensor_id", default_value="0"),
-            DeclareLaunchArgument("top_sensor_id", default_value="1"),
+            DeclareLaunchArgument("camera_sensor_id", default_value="0"),
             DeclareLaunchArgument("capture_width", default_value="1280"),
             DeclareLaunchArgument("capture_height", default_value="720"),
             DeclareLaunchArgument("output_width", default_value="960"),
             DeclareLaunchArgument("output_height", default_value="540"),
             DeclareLaunchArgument("framerate", default_value="30"),
-            DeclareLaunchArgument("bottom_flip_method", default_value="0"),
-            DeclareLaunchArgument("top_flip_method", default_value="0"),
-            DeclareLaunchArgument("bottom_frame_id", default_value="bottom_camera"),
-            DeclareLaunchArgument("top_frame_id", default_value="top_camera"),
+            DeclareLaunchArgument("camera_flip_method", default_value="0"),
+            DeclareLaunchArgument("camera_frame_id", default_value="camera"),
             DeclareLaunchArgument(
-                "input_image_topic", default_value="/camera/rgb/image_raw"
+                "input_image_topic", default_value="/camera/image_raw"
             ),
             DeclareLaunchArgument("namespace", default_value="yolo"),
             DeclareLaunchArgument("use_debug", default_value="False"),
@@ -51,17 +48,15 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(csi_launch),
                 launch_arguments={
-                    "bottom_sensor_id": LaunchConfiguration("bottom_sensor_id"),
-                    "top_sensor_id": LaunchConfiguration("top_sensor_id"),
+                    "sensor_id": LaunchConfiguration("camera_sensor_id"),
+                    "image_topic": LaunchConfiguration("input_image_topic"),
                     "capture_width": LaunchConfiguration("capture_width"),
                     "capture_height": LaunchConfiguration("capture_height"),
                     "output_width": LaunchConfiguration("output_width"),
                     "output_height": LaunchConfiguration("output_height"),
                     "framerate": LaunchConfiguration("framerate"),
-                    "bottom_flip_method": LaunchConfiguration("bottom_flip_method"),
-                    "top_flip_method": LaunchConfiguration("top_flip_method"),
-                    "bottom_frame_id": LaunchConfiguration("bottom_frame_id"),
-                    "top_frame_id": LaunchConfiguration("top_frame_id"),
+                    "flip_method": LaunchConfiguration("camera_flip_method"),
+                    "frame_id": LaunchConfiguration("camera_frame_id"),
                 }.items(),
             ),
             IncludeLaunchDescription(
@@ -93,6 +88,11 @@ def generate_launch_description():
                 executable="traffic_light_node",
                 name="traffic_light_node",
                 output="screen",
+                parameters=[
+                    {
+                        "image_topic": LaunchConfiguration("input_image_topic"),
+                    }
+                ],
             ),
         ]
     )

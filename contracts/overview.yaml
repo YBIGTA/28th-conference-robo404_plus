@@ -32,7 +32,7 @@ principles:
   - "decision_node만 최종 /cmd_vel을 발행한다."
   - "follower_node는 최종 주행 명령이 아니라 라인 기준 후보 속도만 발행한다."
   - "yolo_node는 객체 검출 결과만 발행한다."
-  - "traffic_light_node가 /yolo/detections의 bbox와 /camera/rgb/image_raw의 색상 정보를 신호등 상태로 변환한다."
+  - "traffic_light_node가 /yolo/detections의 bbox와 /camera/image_raw의 색상 정보를 신호등 상태로 변환한다."
   - "1차 구조에서는 좌회전과 우회전 판단을 제외한다."
   - "1차 구조에서는 YOLO tracking과 3D detection을 제외한다."
   - "하드웨어 제어 계층은 이 브랜치의 책임 범위에서 제외한다."

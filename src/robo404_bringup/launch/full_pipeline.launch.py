@@ -22,19 +22,16 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("engine_path", default_value=""),
-            DeclareLaunchArgument("bottom_sensor_id", default_value="0"),
-            DeclareLaunchArgument("top_sensor_id", default_value="1"),
+            DeclareLaunchArgument("camera_sensor_id", default_value="0"),
             DeclareLaunchArgument("capture_width", default_value="1280"),
             DeclareLaunchArgument("capture_height", default_value="720"),
             DeclareLaunchArgument("output_width", default_value="960"),
             DeclareLaunchArgument("output_height", default_value="540"),
             DeclareLaunchArgument("framerate", default_value="30"),
-            DeclareLaunchArgument("bottom_flip_method", default_value="0"),
-            DeclareLaunchArgument("top_flip_method", default_value="0"),
-            DeclareLaunchArgument("bottom_frame_id", default_value="bottom_camera"),
-            DeclareLaunchArgument("top_frame_id", default_value="top_camera"),
+            DeclareLaunchArgument("camera_flip_method", default_value="0"),
+            DeclareLaunchArgument("camera_frame_id", default_value="camera"),
             DeclareLaunchArgument(
-                "input_image_topic", default_value="/camera/rgb/image_raw"
+                "input_image_topic", default_value="/camera/image_raw"
             ),
             DeclareLaunchArgument("namespace", default_value="yolo"),
             DeclareLaunchArgument("use_debug", default_value="False"),
@@ -101,17 +98,14 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(perception_launch),
                 launch_arguments={
                     "engine_path": LaunchConfiguration("engine_path"),
-                    "bottom_sensor_id": LaunchConfiguration("bottom_sensor_id"),
-                    "top_sensor_id": LaunchConfiguration("top_sensor_id"),
+                    "camera_sensor_id": LaunchConfiguration("camera_sensor_id"),
                     "capture_width": LaunchConfiguration("capture_width"),
                     "capture_height": LaunchConfiguration("capture_height"),
                     "output_width": LaunchConfiguration("output_width"),
                     "output_height": LaunchConfiguration("output_height"),
                     "framerate": LaunchConfiguration("framerate"),
-                    "bottom_flip_method": LaunchConfiguration("bottom_flip_method"),
-                    "top_flip_method": LaunchConfiguration("top_flip_method"),
-                    "bottom_frame_id": LaunchConfiguration("bottom_frame_id"),
-                    "top_frame_id": LaunchConfiguration("top_frame_id"),
+                    "camera_flip_method": LaunchConfiguration("camera_flip_method"),
+                    "camera_frame_id": LaunchConfiguration("camera_frame_id"),
                     "input_image_topic": LaunchConfiguration("input_image_topic"),
                     "namespace": LaunchConfiguration("namespace"),
                     "use_debug": LaunchConfiguration("use_debug"),
@@ -135,6 +129,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(drive_launch),
                 launch_arguments={
+                    "follower_image_topic": LaunchConfiguration("input_image_topic"),
                     "publish_follower_debug_image": LaunchConfiguration(
                         "publish_follower_debug_image"
                     ),

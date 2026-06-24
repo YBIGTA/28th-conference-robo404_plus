@@ -2,20 +2,13 @@ topics:
   "/camera/image_raw":
     type: "sensor_msgs/msg/Image"
     status: "changed"
-    producer: "csi_camera/bottom_camera"
+    producer: "csi_camera/camera"
     consumers:
       - "follower_node"
-    description: "라인 검출용 하단 카메라 이미지"
-
-  "/camera/rgb/image_raw":
-    type: "sensor_msgs/msg/Image"
-    status: "changed"
-    producer: "csi_camera/top_camera"
-    consumers:
       - "yolo_node"
       - "debug_node"
       - "traffic_light_node"
-    description: "YOLO 추론 및 디버그 시각화용 상단 카메라 이미지"
+    description: "라인 검출, YOLO 추론, 신호등 색상 분석에 공용으로 쓰는 카메라 이미지"
 
   "/cmd_vel_line":
     type: "geometry_msgs/msg/Twist"
