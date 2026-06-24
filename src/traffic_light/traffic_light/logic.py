@@ -1,6 +1,5 @@
 import math
 import re
-from dataclasses import dataclass, field
 
 import cv2
 import numpy as np
@@ -11,36 +10,52 @@ STATE_RED = "RED"
 STATE_GREEN = "GREEN"
 
 
-@dataclass(frozen=True)
 class DetectionCandidate:
-    class_name: str
-    score: float
-    center_x: float
-    center_y: float
-    size_x: float
-    size_y: float
+    def __init__(self, class_name, score, center_x, center_y, size_x, size_y):
+        self.class_name = class_name
+        self.score = score
+        self.center_x = center_x
+        self.center_y = center_y
+        self.size_x = size_x
+        self.size_y = size_y
 
 
-@dataclass(frozen=True)
 class TrafficLightConfig:
-    traffic_light_class_names: tuple = field(
-        default_factory=lambda: ("traffic light", "traffic_light")
-    )
-    min_detection_confidence: float = 0.5
-    min_bbox_area_px: int = 25
-    red_h_low_1: int = 0
-    red_h_high_1: int = 10
-    red_h_low_2: int = 170
-    red_h_high_2: int = 180
-    red_s_min: int = 80
-    red_v_min: int = 80
-    green_h_low: int = 40
-    green_h_high: int = 90
-    green_s_min: int = 60
-    green_v_min: int = 60
-    min_red_ratio: float = 0.03
-    min_green_ratio: float = 0.03
-    red_green_margin: float = 1.2
+    def __init__(
+        self,
+        traffic_light_class_names=("traffic light", "traffic_light"),
+        min_detection_confidence=0.5,
+        min_bbox_area_px=25,
+        red_h_low_1=0,
+        red_h_high_1=10,
+        red_h_low_2=170,
+        red_h_high_2=180,
+        red_s_min=80,
+        red_v_min=80,
+        green_h_low=40,
+        green_h_high=90,
+        green_s_min=60,
+        green_v_min=60,
+        min_red_ratio=0.03,
+        min_green_ratio=0.03,
+        red_green_margin=1.2,
+    ):
+        self.traffic_light_class_names = traffic_light_class_names
+        self.min_detection_confidence = min_detection_confidence
+        self.min_bbox_area_px = min_bbox_area_px
+        self.red_h_low_1 = red_h_low_1
+        self.red_h_high_1 = red_h_high_1
+        self.red_h_low_2 = red_h_low_2
+        self.red_h_high_2 = red_h_high_2
+        self.red_s_min = red_s_min
+        self.red_v_min = red_v_min
+        self.green_h_low = green_h_low
+        self.green_h_high = green_h_high
+        self.green_s_min = green_s_min
+        self.green_v_min = green_v_min
+        self.min_red_ratio = min_red_ratio
+        self.min_green_ratio = min_green_ratio
+        self.red_green_margin = red_green_margin
 
 
 def normalize_class_name(class_name):

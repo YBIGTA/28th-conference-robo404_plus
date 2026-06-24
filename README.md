@@ -1,116 +1,98 @@
-# decoupled-perception-simulation
+# Robo404 ROS2 Pipeline
 
-Decoupled ROS 2 Foxy perception pipeline (OpenCV Line Tracker and YOLOv8 Detector) running in a Gazebo simulation environment.
+이 레포는 Robo404의 ROS2 소프트웨어 파이프라인을 정리하고 구현하기 위한 작업 공간이다.
 
----
+1차 범위는 **카메라 이미지 입력부터 최종 `/cmd_vel` 출력까지**이다. lino hardware, motor driver, base controller, 실제 actuator 제어는 이 브랜치의 범위에서 제외하고 이후 하드웨어 브랜치와 합친다.
 
-## ⚡ One-Click Launch (Recommended)
+## Phase 1 Goal
 
-You can launch the entire system (Gazebo simulation, Line Tracker node, YOLO Detector node, Safety Arbiter node, and the graphical rqt_image_view visualizer) with a single command:
-
-```bash
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 launch follower full_system.launch.py
+```text
+라인을 따라 주행한다.
+빨간불이면 멈춘다.
+초록불이면 다시 간다.
+라인을 잃으면 정지하거나 복구 대기한다.
+최종 /cmd_vel은 decision_node 하나만 발행한다.
 ```
 
----
+1차 구조에서는 좌회전/우회전 판단, 교차로 판단, YOLO tracking, depth 기반 3D detection을 제외한다. YOLO는 우선 신호등 판단에만 사용한다.
 
-## 🚗 How to Make the Car Move (Safety Arbiter & WASD Teleop)
+## Target Pipeline
 
-Neither perception node is allowed to publish directly to `/cmd_vel`. Instead, the **Safety Arbiter** acts as the central coordinator:
-1. **OpenCV Line Tracker** publishes to `/cmd_vel_path`.
-2. **YOLOv8 Obstacle Detector** publishes to `/yolo_detections`.
-3. **Safety Arbiter** decides if the path is safe (no obstacles too close) and forwards the correct commands to `/cmd_vel` to move the robot:
-   - **Manual WASD Override**: You can manually drive the robot using the WASD keyboard node. Teleop commands take priority. If you stop typing WASD for 1.0 second, the robot automatically resumes autonomous line tracking!
-   - **Emergency Stop (Collision Prevention)**: In both manual and autonomous mode, the Safety Arbiter will automatically block motion and trigger an Emergency Stop if you try to drive into the red obstacle box.
+```text
+Bottom Camera
+  -> csi_camera/bottom_camera
+  -> /camera/image_raw
+  -> follower_node
+      -> /cmd_vel_line
+      -> /path_state
 
-### 🎮 Manual Keyboard Teleop (WASD)
-In a new terminal window, run the WASD teleop node:
-```bash
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 run follower wasd_teleop_node
-```
-Use keys `w`, `a`, `s`, `d` to speed up/slow down/steer, and `space` / `x` to stop.
+Top Camera
+  -> csi_camera/top_camera
+  -> /camera/rgb/image_raw
+  -> yolo_node
+      -> /yolo/detections
+  -> traffic_light_node
+      <- /yolo/detections
+      <- /camera/rgb/image_raw
+      -> /traffic_light_state
 
----
+decision_node
+  <- /cmd_vel_line
+  <- /path_state
+  <- /traffic_light_state
+  -> /cmd_vel
+  -> /decision_state
 
-## 🚀 Step-by-Step Manual Commands Guide
-
-If you prefer to start each component manually in separate terminals (make sure to run the setup sourcing in every tab):
-
-### Step 1: Launch the Gazebo Simulation
-Starts the Gazebo simulation loaded with the track, traffic lights, obstacle box, and the differential drive robot.
-```bash
-# Terminal 1
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 launch follower simulation.launch.py
-```
-
----
-
-### Step 2: View the Robot Camera Feed (Camera Command)
-Launches the ROS image viewer. In the GUI window, select `/camera/image_raw` from the dropdown menu in the top-left corner to see what the robot sees.
-```bash
-# Terminal 2
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 run rqt_image_view rqt_image_view
+debug_monitor_node (optional)
+  <- /cmd_vel_line
+  <- /path_state
+  <- /yolo/detections
+  <- /traffic_light_state
+  <- /decision_state
+  <- /cmd_vel
+  -> /debug/pipeline_state
+  -> /debug/pipeline_warnings
 ```
 
----
+핵심 규칙:
 
-### Step 3: Run the OpenCV Line Tracker Node
-Starts the line tracking perception wrapper.
-```bash
-# Terminal 3
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 run follower line_tracker_node
+```text
+follower_node -> /cmd_vel_line
+decision_node -> /cmd_vel
 ```
 
----
+`follower_node`는 라인 기준 후보 속도만 만들고, 최종 주행 명령은 `decision_node`만 발행한다.
 
-### Step 4: Run the YOLOv8 Obstacle Detector Node
-Starts the obstacle detector wrapper (operates in CV2 HSV fallback mode if `ultralytics` is not installed on the system).
-```bash
-# Terminal 4
-cd ~/28th-conference-robo404_plus
-source /opt/ros/foxy/setup.bash
-source install/setup.bash
-ros2 run follower yolo_detector_node
+## Repository Structure
+
+```text
+src/
+  csi_camera/    Jetson CSI 카메라 2개를 ROS Image 토픽으로 발행
+  follower/       라인 검출 및 라인 추종 후보 속도 생성
+  traffic_light/  YOLO bbox와 상단 카메라 이미지로 신호등 상태 생성
+  decision/       라인/신호등 상태를 종합해 최종 /cmd_vel 생성
+  debug_monitor/  전체 pipeline topic 상태와 warning 요약
+  yolo_msgs/      YOLO DetectionArray / Detection 메시지 정의
+  yolo_jetson/    Jetson Nano / TensorRT YOLO 검출 노드
+  yolo_debug/     YOLO bbox 디버그 및 UDP 스트리밍 노드
+  yolo_bringup/   YOLO launch 파일 관리
+  robo404_bringup/ 전체 파이프라인 launch 파일 관리
+
+contracts/        구현 기준 계약서
+docs/             설계 설명 문서
+explain.md        전체 구조와 작업 순서 상세 설명
 ```
 
----
+## Contracts
 
-### Step 5: Monitor Intermediate Perception Topics (Verification)
-Neither perception node commands the robot directly. You can echo the safety-decoupled topics to see the commands and detections intended for the Safety Arbiter:
+`contracts/`는 구현할 때 맞춰야 하는 기준이다.
 
-```bash
-# Echo Line steering commands
-ros2 topic echo /cmd_vel_path
-
-# Echo Track path visibility status ("visible" / "lost")
-ros2 topic echo /path_state
-
-# Echo Obstacle bounding boxes and virtual proximity metrics
-ros2 topic echo /yolo_detections
+```text
+contracts/overview.yaml   1차 범위, 원칙, 제외 대상
+contracts/pipeline.yaml   현재 파이프라인과 목표 파이프라인
+contracts/topics.yaml     토픽별 producer / consumer / message type
+contracts/nodes.yaml      노드별 책임, 입력, 출력, 서비스
+contracts/states.yaml     decision 상태, traffic light 상태, 판단 규칙
 ```
 
----
-
-## 🧪 Running Unit Tests (Offline/TDD)
-
-You can run the offline pytest suite to verify the core OpenCV math and YOLO fallback logic without launching Gazebo:
-
-```bash
-cd ~/28th-conference-robo404_plus
-PYTHONPATH=src/follower python3 -m pytest src/follower/test
-```
+상세 설명은 [explain.md](explain.md)를 먼저 보고, 실제 구현 기준은 [contracts/README.md](contracts/README.md)와 각 YAML 파일을 기준으로 본다.

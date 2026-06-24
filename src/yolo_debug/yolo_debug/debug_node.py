@@ -173,7 +173,7 @@ class DebugNode(LifecycleNode):
 
         for name, value in numeric_parameters.items():
             if value <= 0:
-                self.get_logger().error("%s must be > 0", name)
+                self.get_logger().error("{} must be > 0".format(name))
                 return False
 
         if not self.stream_host:
@@ -320,16 +320,17 @@ class DebugNode(LifecycleNode):
             if writer.isOpened():
                 self._stream_writer = writer
                 self.get_logger().info(
-                    "Opened %s debug stream to %s:%d",
-                    pipeline_name,
-                    self.stream_host,
-                    self.stream_port,
+                    "Opened {} debug stream to {}:{}".format(
+                        pipeline_name,
+                        self.stream_host,
+                        self.stream_port,
+                    )
                 )
                 return
 
             writer.release()
             self.get_logger().warn(
-                "Failed to open %s debug stream pipeline", pipeline_name
+                "Failed to open {} debug stream pipeline".format(pipeline_name)
             )
 
         self._stream_failed = True

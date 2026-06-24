@@ -54,3 +54,18 @@ target_pipeline:
     outputs:
       - "/cmd_vel"
       - "/decision_state"
+
+  debug_monitor:
+    node: "debug_monitor_node"
+    status: "new"
+    launch_arg: "use_debug_monitor:=True"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/yolo/detections"
+      - "/traffic_light_state"
+      - "/decision_state"
+      - "/cmd_vel"
+    outputs:
+      - "/debug/pipeline_state"
+      - "/debug/pipeline_warnings"
