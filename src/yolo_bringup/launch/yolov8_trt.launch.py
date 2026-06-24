@@ -199,12 +199,12 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "num_labels",
-                default_value="80",
+                default_value="4",
                 description="Number of model classes",
             ),
             DeclareLaunchArgument(
                 "class_names",
-                default_value="[]",
+                default_value="['red', 'green', 'off', 'yellow']",
                 description="Custom class names list",
             ),
             yolo_node,

@@ -74,8 +74,31 @@ public:
         if (max_det_ <= 0) {
             throw std::runtime_error("max_det must be positive");
         }
-        if (num_labels_ <= 0 || num_labels_ > 80) {
-            throw std::runtime_error("num_labels must be in the range [1, 80]");
+
+        RCLCPP_INFO(this->get_logger(), "Loading TensorRT engine: %s", engine_path_.c_str());
+        cudaSetDevice(0);
+        yolo_ = std::make_unique<YOLOv8>(engine_path_);
+        yolo_->MakePipe(true);
+        input_size_ = cv::Size(imgsz_width_, imgsz_height_);
+
+        int engine_num_labels = yolo_->output_bindings[0].dims.d[1] - 4;
+        RCLCPP_INFO(this->get_logger(), "TensorRT engine output channels: %d -> detected %d labels", 
+                    yolo_->output_bindings[0].dims.d[1], engine_num_labels);
+
+        if (num_labels_ != engine_num_labels) {
+            RCLCPP_WARN(this->get_logger(), 
+                        "Parameter 'num_labels' (%d) does not match engine output classes (%d). Overriding to %d.", 
+                        num_labels_, engine_num_labels, engine_num_labels);
+            num_labels_ = engine_num_labels;
+        }
+
+        if (class_names_.size() == 80 && num_labels_ == 4) {
+            RCLCPP_WARN(this->get_logger(), "Using default COCO class names with a 4-class engine. Falling back to traffic light class names: ['red', 'green', 'off', 'yellow']");
+            class_names_ = {"red", "green", "off", "yellow"};
+        }
+
+        if (num_labels_ <= 0 || num_labels_ > 1000) {
+            throw std::runtime_error("num_labels must be in the range [1, 1000]");
         }
 
         rclcpp::QoS image_qos(rclcpp::KeepLast(1));
@@ -89,12 +112,6 @@ public:
                 this,
                 std::placeholders::_1,
                 std::placeholders::_2));
-
-        RCLCPP_INFO(this->get_logger(), "Loading TensorRT engine: %s", engine_path_.c_str());
-        cudaSetDevice(0);
-        yolo_ = std::make_unique<YOLOv8>(engine_path_);
-        yolo_->MakePipe(true);
-        input_size_ = cv::Size(imgsz_width_, imgsz_height_);
 
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             "image_raw",

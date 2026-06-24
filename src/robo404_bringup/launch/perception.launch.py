@@ -48,8 +48,8 @@ def generate_launch_description():
             DeclareLaunchArgument("debug_stream_bitrate", default_value="4000000"),
             DeclareLaunchArgument("debug_use_hw_encoder", default_value="True"),
             DeclareLaunchArgument("debug_draw_fps", default_value="True"),
-            DeclareLaunchArgument("num_labels", default_value="80"),
-            DeclareLaunchArgument("class_names", default_value="[]"),
+            DeclareLaunchArgument("num_labels", default_value="4"),
+            DeclareLaunchArgument("class_names", default_value="['red', 'green', 'off', 'yellow']"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(csi_launch),
                 launch_arguments={

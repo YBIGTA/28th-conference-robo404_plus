@@ -97,8 +97,8 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "debug_monitor_cmd_compare_epsilon", default_value="0.001"
             ),
-            DeclareLaunchArgument("num_labels", default_value="80"),
-            DeclareLaunchArgument("class_names", default_value="[]"),
+            DeclareLaunchArgument("num_labels", default_value="4"),
+            DeclareLaunchArgument("class_names", default_value="['red', 'green', 'off', 'yellow']"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(perception_launch),
                 launch_arguments={
