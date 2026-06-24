@@ -29,7 +29,8 @@ setup(
             'line_tracker_node = follower.line_tracker_node:main',
             'yolo_detector_node = follower.yolo_detector_node:main',
             'safety_arbiter_node = follower.safety_arbiter_node:main',
-            'wasd_teleop_node = follower.wasd_teleop_node:main'
+            'wasd_teleop_node = follower.wasd_teleop_node:main',
+            'rl_follower_node = follower.rl_follower_node:main'
         ],
     },
 )
