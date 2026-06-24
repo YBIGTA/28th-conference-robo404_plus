@@ -1,6 +1,4 @@
 import re
-from dataclasses import dataclass, field
-from typing import Optional
 
 
 STALE_VALUE = "STALE"
@@ -29,33 +27,60 @@ STOP_DECISIONS = {
 }
 
 
-@dataclass(frozen=True)
 class Freshness:
-    name: str
-    timeout_sec: float
-    age_sec: Optional[float] = None
-    stale: bool = True
-    missing: bool = True
+    def __init__(
+        self,
+        name,
+        timeout_sec,
+        age_sec=None,
+        stale=True,
+        missing=True,
+    ):
+        self.name = name
+        self.timeout_sec = timeout_sec
+        self.age_sec = age_sec
+        self.stale = stale
+        self.missing = missing
 
 
-@dataclass(frozen=True)
 class DetectionSummary:
-    detection_count: int = 0
-    traffic_light_count: int = 0
-    best_score: Optional[float] = None
-    best_area: Optional[float] = None
-    best_class_name: str = ""
+    def __init__(
+        self,
+        detection_count=0,
+        traffic_light_count=0,
+        best_score=None,
+        best_area=None,
+        best_class_name="",
+    ):
+        self.detection_count = detection_count
+        self.traffic_light_count = traffic_light_count
+        self.best_score = best_score
+        self.best_area = best_area
+        self.best_class_name = best_class_name
 
 
-@dataclass(frozen=True)
 class PipelineSnapshot:
-    path_state: str = STALE_VALUE
-    traffic_light_state: str = STALE_VALUE
-    decision_state: str = STALE_VALUE
-    cmd_vel: Optional[object] = None
-    cmd_vel_line: Optional[object] = None
-    detection_summary: DetectionSummary = field(default_factory=DetectionSummary)
-    freshness: dict = field(default_factory=dict)
+    def __init__(
+        self,
+        path_state=STALE_VALUE,
+        traffic_light_state=STALE_VALUE,
+        decision_state=STALE_VALUE,
+        cmd_vel=None,
+        cmd_vel_line=None,
+        detection_summary=None,
+        freshness=None,
+    ):
+        self.path_state = path_state
+        self.traffic_light_state = traffic_light_state
+        self.decision_state = decision_state
+        self.cmd_vel = cmd_vel
+        self.cmd_vel_line = cmd_vel_line
+        self.detection_summary = (
+            detection_summary
+            if detection_summary is not None
+            else DetectionSummary()
+        )
+        self.freshness = freshness if freshness is not None else {}
 
 
 TIMEOUT_WARNING_NAMES = {

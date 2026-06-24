@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-
-
 PATH_LINE_VISIBLE = "LINE_VISIBLE"
 PATH_LINE_LOST = "LINE_LOST"
 PATH_FINAL_STOP = "FINAL_STOP"
@@ -29,21 +26,29 @@ TRAFFIC_LIGHT_STATES = {
 }
 
 
-@dataclass(frozen=True)
 class DecisionInput:
-    motion_enabled: bool
-    path_state: str
-    traffic_light_state: str
-    red_latched: bool
-    cmd_vel_line_timed_out: bool
-    path_state_timed_out: bool
+    def __init__(
+        self,
+        motion_enabled,
+        path_state,
+        traffic_light_state,
+        red_latched,
+        cmd_vel_line_timed_out,
+        path_state_timed_out,
+    ):
+        self.motion_enabled = motion_enabled
+        self.path_state = path_state
+        self.traffic_light_state = traffic_light_state
+        self.red_latched = red_latched
+        self.cmd_vel_line_timed_out = cmd_vel_line_timed_out
+        self.path_state_timed_out = path_state_timed_out
 
 
-@dataclass(frozen=True)
 class DecisionResult:
-    state: str
-    pass_cmd_vel_line: bool
-    red_latched: bool
+    def __init__(self, state, pass_cmd_vel_line, red_latched):
+        self.state = state
+        self.pass_cmd_vel_line = pass_cmd_vel_line
+        self.red_latched = red_latched
 
 
 def normalize_path_state(path_state):

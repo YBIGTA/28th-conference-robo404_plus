@@ -220,7 +220,7 @@ def validate_stream_parameters():
 
     for name, value in numeric_parameters.items():
         if value <= 0:
-            node.get_logger().error("%s must be > 0", name)
+            node.get_logger().error("{} must be > 0".format(name))
             return False
 
     if not stream_host:
@@ -296,17 +296,19 @@ def open_stream_writer():
         if writer.isOpened():
             stream_writer = writer
             node.get_logger().info(
-                "Opened %s follower debug stream to %s:%d",
-                pipeline_name,
-                stream_host,
-                stream_port,
+                "Opened {} follower debug stream to {}:{}".format(
+                    pipeline_name,
+                    stream_host,
+                    stream_port,
+                )
             )
             return
 
         writer.release()
         node.get_logger().warn(
-            "Failed to open %s follower debug stream pipeline",
-            pipeline_name,
+            "Failed to open {} follower debug stream pipeline".format(
+                pipeline_name
+            )
         )
 
     stream_failed = True
@@ -618,9 +620,12 @@ def main():
             10,
         )
 
-    subscription = node.create_subscription(Image, 'camera/image_raw',
-                                            image_callback,
-                                            10)
+    subscription = node.create_subscription(
+        Image,
+        'camera/image_raw',
+        image_callback,
+        rclpy.qos.qos_profile_sensor_data,
+    )
 
     timer = node.create_timer(TIMER_PERIOD, timer_callback)
 
