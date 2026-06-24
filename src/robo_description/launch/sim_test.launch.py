@@ -35,6 +35,22 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
+def _start_pose():
+    """Spawn pose derived from the single source of truth (track_path).
+
+    Falls back to a sensible default if the helper can't be imported.
+    """
+    import sys
+    pkg_share = get_package_share_directory("robo_description")
+    sys.path.insert(0, os.path.join(pkg_share, "..", "..", "lib", "robo_description"))
+    try:
+        from track_path import start_pose
+        x, y, yaw = start_pose()
+        return f"{x:.4f}", f"{y:.4f}", f"{yaw:.4f}"
+    except Exception:
+        return "-0.6", "0.4", "0.0"
+
+
 def generate_launch_description():
     pkg_share = get_package_share_directory("robo_description")
     pkg_gazebo_ros = get_package_share_directory("gazebo_ros")
@@ -42,6 +58,7 @@ def generate_launch_description():
     xacro_file = os.path.join(pkg_share, "urdf", "robo404.urdf.xacro")
     default_world = os.path.join(pkg_share, "worlds", "traffic_light_track.world")
     rviz_config = os.path.join(pkg_share, "rviz", "sim_view.rviz")
+    start_x, start_y, start_yaw = _start_pose()
     default_model = os.path.join(
         pkg_share, "models_yolo", "best_traffic_nano_yolo.pt"
     )
@@ -118,6 +135,11 @@ def generate_launch_description():
             {
                 "publish_debug_image": True,
                 "show_debug_window": False,
+                # Real-robot defaults (20 m/s) are far too fast for the small
+                # sim car; slow it down and raise the steering gain so it can
+                # track the U-turns (wide 90 deg bottom-cam keeps line in view).
+                "linear_speed": 0.30,
+                "kp": 0.012,
             }
         ],
     )
@@ -194,10 +216,10 @@ def generate_launch_description():
         DeclareLaunchArgument("rviz", default_value="true"),
         DeclareLaunchArgument("model_path", default_value=default_model),
         DeclareLaunchArgument("auto_demo", default_value="true"),
-        DeclareLaunchArgument("x_pose", default_value="-3.0"),
-        DeclareLaunchArgument("y_pose", default_value="2.5"),
+        DeclareLaunchArgument("x_pose", default_value="-0.6"),
+        DeclareLaunchArgument("y_pose", default_value="0.4"),
         DeclareLaunchArgument("z_pose", default_value="0.05"),
-        DeclareLaunchArgument("yaw", default_value="0.0"),
+        DeclareLaunchArgument("yaw", default_value=start_yaw),
         robot_state_publisher,
         gzserver,
         gzclient,
