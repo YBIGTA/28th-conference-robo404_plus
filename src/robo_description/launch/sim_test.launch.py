@@ -76,6 +76,8 @@ def generate_launch_description():
     y_pose = LaunchConfiguration("y_pose")
     z_pose = LaunchConfiguration("z_pose")
     yaw = LaunchConfiguration("yaw")
+    linear_speed = LaunchConfiguration("linear_speed")
+    kp = LaunchConfiguration("kp")
 
     robot_description = {
         "robot_description": ParameterValue(
@@ -135,11 +137,8 @@ def generate_launch_description():
             {
                 "publish_debug_image": True,
                 "show_debug_window": False,
-                # Real-robot defaults (20 m/s) are far too fast for the small
-                # sim car; slow it down and raise the steering gain so it can
-                # track the U-turns (wide 90 deg bottom-cam keeps line in view).
-                "linear_speed": 0.30,
-                "kp": 0.012,
+                "linear_speed": linear_speed,
+                "kp": kp,
             }
         ],
     )
@@ -220,6 +219,8 @@ def generate_launch_description():
         DeclareLaunchArgument("y_pose", default_value="0.4"),
         DeclareLaunchArgument("z_pose", default_value="0.05"),
         DeclareLaunchArgument("yaw", default_value=start_yaw),
+        DeclareLaunchArgument("linear_speed", default_value="0.30"),
+        DeclareLaunchArgument("kp", default_value="0.025"),
         robot_state_publisher,
         gzserver,
         gzclient,
