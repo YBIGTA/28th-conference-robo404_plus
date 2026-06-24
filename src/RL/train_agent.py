@@ -61,14 +61,27 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"🔧 Device: {device}")
 
-    model = SAC(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        tensorboard_log=TB_DIR,
-        device=device,
-        **SAC_CONFIG,
-    )
+    # Resume support: set RESUME_CKPT=/path/to/ckpt.zip to continue training
+    # from an existing checkpoint instead of starting fresh. The step counter
+    # is preserved so the run picks up where it left off (toward TOTAL_TIMESTEPS).
+    resume_ckpt = os.environ.get("RESUME_CKPT", "").strip()
+    if resume_ckpt:
+        print(f"♻️  Resuming from checkpoint: {resume_ckpt}")
+        model = SAC.load(
+            resume_ckpt,
+            env=env,
+            device=device,
+            tensorboard_log=TB_DIR,
+        )
+    else:
+        model = SAC(
+            "MlpPolicy",
+            env,
+            verbose=1,
+            tensorboard_log=TB_DIR,
+            device=device,
+            **SAC_CONFIG,
+        )
 
     # =====================================================================
     # 3. Run (训练 + 自动保存)
@@ -87,6 +100,9 @@ def main():
             total_timesteps=TOTAL_TIMESTEPS,
             callback=checkpoint_cb,
             log_interval=10,
+            # When resuming, keep the existing step counter so the run
+            # continues toward TOTAL_TIMESTEPS instead of restarting at 0.
+            reset_num_timesteps=not bool(resume_ckpt),
         )
     except KeyboardInterrupt:
         print("\n⏸️  Ctrl-C caught – saving interrupted model …")
