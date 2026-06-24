@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Inertia of a solid box about its center -->
+  <xacro:macro name="box_inertia" params="m x y z">
+    <inertia
+      ixx="${(1.0/12.0) * m * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+      iyy="${(1.0/12.0) * m * (x*x + z*z)}" iyz="0.0"
+      izz="${(1.0/12.0) * m * (x*x + y*y)}" />
+  </xacro:macro>
+
+  <!-- Inertia of a solid cylinder whose symmetry axis points along the local Y
+       axis (the wheels are rotated so their axle is the Y axis). -->
+  <xacro:macro name="wheel_inertia" params="m r h">
+    <inertia
+      ixx="${(1.0/12.0) * m * (3.0*r*r + h*h)}" ixy="0.0" ixz="0.0"
+      iyy="${0.5 * m * r * r}"                  iyz="0.0"
+      izz="${(1.0/12.0) * m * (3.0*r*r + h*h)}" />
+  </xacro:macro>
+
+</robot>
