@@ -56,6 +56,12 @@ public:
         num_labels_ = this->declare_parameter<int>("num_labels", 80);
         const int image_reliability = this->declare_parameter<int>("image_reliability", 2);
 
+        std::vector<std::string> default_classes;
+        for (int i = 0; i < 80; ++i) {
+            default_classes.push_back(class_names[i]);
+        }
+        class_names_ = this->declare_parameter<std::vector<std::string>>("class_names", default_classes);
+
         if (engine_path_.empty()) {
             throw std::runtime_error("Parameter 'engine_path' is required");
         }
@@ -163,7 +169,11 @@ private:
         yolo_msgs::msg::Detection detection;
 
         detection.class_id = object.label;
-        detection.class_name = class_names[object.label];
+        if (object.label >= 0 && object.label < static_cast<int>(class_names_.size())) {
+            detection.class_name = class_names_[object.label];
+        } else {
+            detection.class_name = "unknown";
+        }
         detection.score = object.prob;
 
         detection.bbox.center.position.x = object.rect.x + object.rect.width / 2.0f;
@@ -184,6 +194,7 @@ private:
     int imgsz_width_;
     int max_det_;
     int num_labels_;
+    std::vector<std::string> class_names_;
     cv::Size input_size_;
     std::unique_ptr<YOLOv8> yolo_;
 

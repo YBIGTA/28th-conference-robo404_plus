@@ -110,3 +110,16 @@ def test_custom_thresholds_can_make_color_unknown():
     config = TrafficLightConfig(min_red_ratio=1.1)
 
     assert analyze_traffic_light(detections, make_image((0, 0, 255)), config) == STATE_UNKNOWN
+
+
+def test_direct_red_classification_returns_red():
+    detections = [make_detection(class_name="red", score=0.9)]
+    # Even if image is black, direct classification overrides HSV checks
+    assert analyze_traffic_light(detections, make_image((0, 0, 0))) == STATE_RED
+
+
+def test_direct_green_classification_returns_green():
+    detections = [make_detection(class_name="green", score=0.9)]
+    # Even if image is black, direct classification overrides HSV checks
+    assert analyze_traffic_light(detections, make_image((0, 0, 0))) == STATE_GREEN
+

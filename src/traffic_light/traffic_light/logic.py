@@ -51,11 +51,27 @@ def normalize_class_name(class_name):
 
 
 def analyze_traffic_light(detections, image_bgr, config=None):
-    if image_bgr is None:
-        return STATE_UNKNOWN
-
     if config is None:
         config = TrafficLightConfig()
+
+    # Direct classification check (if model directly outputs "red" or "green")
+    best_direct_detection = None
+    for detection in detections:
+        if detection.score >= config.min_detection_confidence:
+            name = normalize_class_name(detection.class_name)
+            if name in ("red", "green"):
+                if best_direct_detection is None or detection.score > best_direct_detection.score:
+                    best_direct_detection = detection
+
+    if best_direct_detection is not None:
+        name = normalize_class_name(best_direct_detection.class_name)
+        if name == "red":
+            return STATE_RED
+        elif name == "green":
+            return STATE_GREEN
+
+    if image_bgr is None:
+        return STATE_UNKNOWN
 
     selection = select_traffic_light_detection(detections, image_bgr.shape, config)
     if selection is None:
@@ -67,6 +83,7 @@ def analyze_traffic_light(detections, image_bgr, config=None):
         return STATE_UNKNOWN
 
     return classify_crop_color(crop, config)
+
 
 
 def select_traffic_light_detection(detections, image_shape, config):

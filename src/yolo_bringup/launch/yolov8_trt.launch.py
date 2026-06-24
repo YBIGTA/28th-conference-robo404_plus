@@ -20,6 +20,7 @@ def generate_launch_description():
     imgsz_width = LaunchConfiguration("imgsz_width")
     max_det = LaunchConfiguration("max_det")
     num_labels = LaunchConfiguration("num_labels")
+    class_names = LaunchConfiguration("class_names")
     publish_dbg_image = LaunchConfiguration("publish_dbg_image")
     debug_stream_ip = LaunchConfiguration("debug_stream_ip")
     debug_stream_port = LaunchConfiguration("debug_stream_port")
@@ -47,6 +48,7 @@ def generate_launch_description():
                 "imgsz_width": ParameterValue(imgsz_width, value_type=int),
                 "max_det": ParameterValue(max_det, value_type=int),
                 "num_labels": ParameterValue(num_labels, value_type=int),
+                "class_names": class_names,
                 "image_reliability": ParameterValue(
                     image_reliability, value_type=int
                 ),
@@ -199,6 +201,11 @@ def generate_launch_description():
                 "num_labels",
                 default_value="80",
                 description="Number of model classes",
+            ),
+            DeclareLaunchArgument(
+                "class_names",
+                default_value="[]",
+                description="Custom class names list",
             ),
             yolo_node,
             debug_node,
