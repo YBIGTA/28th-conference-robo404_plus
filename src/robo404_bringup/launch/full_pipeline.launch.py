@@ -97,6 +97,8 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "debug_monitor_cmd_compare_epsilon", default_value="0.001"
             ),
+            DeclareLaunchArgument("num_labels", default_value="80"),
+            DeclareLaunchArgument("class_names", default_value="[]"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(perception_launch),
                 launch_arguments={
@@ -130,6 +132,8 @@ def generate_launch_description():
                         "debug_use_hw_encoder"
                     ),
                     "debug_draw_fps": LaunchConfiguration("debug_draw_fps"),
+                    "num_labels": LaunchConfiguration("num_labels"),
+                    "class_names": LaunchConfiguration("class_names"),
                 }.items(),
             ),
             IncludeLaunchDescription(
