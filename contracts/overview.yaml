@@ -1,0 +1,62 @@
+version: "0.1"
+name: "robo404_phase1_pipeline_contract"
+owner: "Sleepy lee"
+
+scope:
+  name: "image_to_cmd_vel"
+  description: "카메라 이미지 입력부터 최종 /cmd_vel 출력까지의 ROS2 파이프라인을 정리하고 구현한다."
+  includes:
+    - "camera image input"
+    - "line detection"
+    - "YOLO traffic light detection"
+    - "traffic light state"
+    - "decision state"
+    - "/cmd_vel output"
+  excludes:
+    - "lino hardware"
+    - "motor driver"
+    - "base controller"
+    - "actuator control"
+    - "left turn decision"
+    - "right turn decision"
+    - "intersection decision"
+    - "depth based 3D detection"
+    - "YOLO tracking"
+
+source_docs:
+  - "README.md"
+  - "docs/overall.md"
+  - "docs/io.md"
+
+principles:
+  - "decision_node만 최종 /cmd_vel을 발행한다."
+  - "follower_node는 최종 주행 명령이 아니라 라인 기준 후보 속도만 발행한다."
+  - "yolo_node는 객체 검출 결과만 발행한다."
+  - "traffic_light_node가 /yolo/detections의 bbox와 /camera/rgb/image_raw의 색상 정보를 신호등 상태로 변환한다."
+  - "1차 구조에서는 좌회전과 우회전 판단을 제외한다."
+  - "1차 구조에서는 YOLO tracking과 3D detection을 제외한다."
+  - "하드웨어 제어 계층은 이 브랜치의 책임 범위에서 제외한다."
+
+phase1_goal:
+  - "라인을 따라 주행한다."
+  - "빨간불이면 멈춘다."
+  - "초록불이면 다시 간다."
+  - "라인을 잃으면 정지하거나 복구 대기한다."
+  - "최종 /cmd_vel은 decision_node 하나만 발행한다."
+
+excluded_from_phase1:
+  nodes:
+    - "tracking_node"
+    - "detect_3d_node"
+  topics:
+    - "/yolo/tracking"
+    - "/yolo/detections_3d"
+  outputs:
+    - "/yolo/dgb_bb_markers"
+    - "/yolo/dgb_kp_markers"
+  features:
+    - "left_turn_decision"
+    - "right_turn_decision"
+    - "intersection_decision"
+    - "depth_3d_detection"
+    - "hardware_control"
