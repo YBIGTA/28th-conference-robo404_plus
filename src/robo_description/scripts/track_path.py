@@ -20,7 +20,7 @@ The course, in driving order from START:
 """
 import math
 
-GROUND_M = 4.0            # ground plane is GROUND_M x GROUND_M metres
+GROUND_M = 6.0            # ground plane is GROUND_M x GROUND_M metres
 LINE_WIDTH_M = 0.04       # painted line width (~real tape width at this scale)
 
 
@@ -34,57 +34,46 @@ LINE_WIDTH_M = 0.04       # painted line width (~real tape width at this scale)
 #   STRAIGHT = 1.0 m, R_TURN = 0.43 m
 #   overall track ~= (STRAIGHT + 2*R_TURN) x (2*R_TURN) = 1.86 x 0.86 m
 # Placed on a 4x4 m ground, roughly centered.
-R_CORNER = 0.45           # rounded-corner radius of the circuit
-R_S = 0.35                # S-chicane bend radius
-S_ANGLE = math.pi / 2     # 90 deg per chicane bend
-W = 1.6                   # circuit width  (top/bottom edge length)
-H = 1.0                   # circuit height (left/right edge length)
-_S_SPAN = 1.40            # horizontal distance the chicane covers (measured)
-_TOP_PAD = (W - _S_SPAN) / 2.0
-
-# Race-circuit loop: a rounded rectangle (four 90-deg corners = 360-deg loop)
-# with an S-chicane carved into the TOP edge. The chicane is symmetric
-# (+,-,-,+) so it returns to the same heading with zero net offset and the
-# loop still closes. Course in driving order from START (top edge, heading +X):
-#   1. top edge with S-chicane
-#   2-5. four rounded corners + right/bottom/left edges back to start
-START_XY = (1.0, 1.2)
-START_HEADING = 0.0       # +X (driving to the right)
-
-_C = (math.pi / 2) * R_CORNER     # arc length of one 90-deg corner
-PRIMITIVES = [
-    (_TOP_PAD, 0.0),
-    (S_ANGLE * R_S, +S_ANGLE),
-    (S_ANGLE * R_S, -S_ANGLE),
-    (S_ANGLE * R_S, -S_ANGLE),
-    (S_ANGLE * R_S, +S_ANGLE),       # top S-chicane (net 0)
-    (_TOP_PAD, 0.0),
-    (_C, +math.pi / 2),              # corner -> heading +Y (down)
-    (H, 0.0),                        # right edge
-    (_C, +math.pi / 2),              # corner -> heading -X
-    (W, 0.0),                        # bottom edge
-    (_C, +math.pi / 2),              # corner -> heading -Y (up)
-    (H, 0.0),                        # left edge
-    (_C, +math.pi / 2),              # corner -> closes the loop
+# Irregular organic circuit, defined by hand-placed waypoints (image frame,
+# metres on the 6x6 ground) and Chaikin corner-cutting smoothing. The waypoints
+# are spaced so the smoothed loop's tightest bend stays >= ~0.45 m radius, which
+# the line-follower can track. Asymmetric on purpose -- varied sweeps, a kink on
+# the lower-left, no symmetry.
+WAYPOINTS = [
+    (1.6, 1.1), (3.2, 0.9), (4.6, 1.6), (4.3, 3.0), (5.0, 4.0),
+    (3.8, 4.7), (2.4, 4.4), (2.7, 3.2), (1.4, 3.4), (0.9, 2.1),
 ]
-STEP_M = 0.02             # integration step
+CHAIKIN_PASSES = 4
+
+STEP_M = 0.02             # (re)sampling step, kept for downstream callers
+
+
+def _chaikin_closed(pts, passes):
+    """Closed Chaikin corner-cutting: smooths a polygon into a rounded loop."""
+    for _ in range(passes):
+        n = len(pts)
+        out = []
+        for i in range(n):
+            p = pts[i]
+            q = pts[(i + 1) % n]
+            out.append((0.75 * p[0] + 0.25 * q[0], 0.75 * p[1] + 0.25 * q[1]))
+            out.append((0.25 * p[0] + 0.75 * q[0], 0.25 * p[1] + 0.75 * q[1]))
+        pts = out
+    return pts
 
 
 def path_segments():
-    """Return the path as one continuous segment list of (x,y) points."""
-    x, y = START_XY
-    h = START_HEADING
-    pts = [(x, y)]
-    for length, turn in PRIMITIVES:
-        n = max(1, int(round(length / STEP_M)))
-        dh = turn / n
-        ds = length / n
-        for _ in range(n):
-            h += dh
-            x += ds * math.cos(h)
-            y += ds * math.sin(h)
-            pts.append((x, y))
-    return [pts]
+    """Return the path as one continuous closed segment of (x,y) points."""
+    loop = _chaikin_closed(WAYPOINTS, CHAIKIN_PASSES)
+    loop = loop + [loop[0]]            # explicitly close the loop
+    return [loop]
+
+
+# START is the first point of the smoothed loop, heading toward the next point.
+_loop0 = path_segments()[0]
+START_XY = _loop0[0]
+START_HEADING = math.atan2(_loop0[1][1] - _loop0[0][1],
+                           _loop0[1][0] - _loop0[0][0])
 
 
 def sample_path(n=1000):
