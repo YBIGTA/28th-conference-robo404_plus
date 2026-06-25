@@ -4,7 +4,6 @@ from decision.logic import (
     DECISION_IDLE,
     DECISION_LINE_LOST,
     DECISION_STOP_FOR_RED,
-    DECISION_WAIT_GREEN,
     PATH_FINAL_STOP,
     PATH_LINE_LOST,
     PATH_LINE_VISIBLE,
@@ -72,7 +71,9 @@ def test_red_light_stops_and_latches_red():
     assert result.red_latched is True
 
 
-def test_unknown_after_red_waits_for_green():
+def test_unknown_after_red_proceeds():
+    # Real-road behaviour: once the red light is no longer visible (UNKNOWN),
+    # the car is allowed to proceed -- only an actively-seen RED holds it.
     result = decide(
         make_input(
             red_latched=True,
@@ -80,9 +81,9 @@ def test_unknown_after_red_waits_for_green():
         )
     )
 
-    assert result.state == DECISION_WAIT_GREEN
-    assert result.pass_cmd_vel_line is False
-    assert result.red_latched is True
+    assert result.state == DECISION_FOLLOW_LINE
+    assert result.pass_cmd_vel_line is True
+    assert result.red_latched is False
 
 
 def test_green_after_red_returns_to_follow_line():

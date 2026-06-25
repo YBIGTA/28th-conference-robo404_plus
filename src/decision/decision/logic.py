@@ -70,7 +70,10 @@ def decide(inputs):
 
     if traffic_light_state == TRAFFIC_RED:
         red_latched = True
-    elif traffic_light_state == TRAFFIC_GREEN:
+    else:
+        # GREEN or UNKNOWN both release the latch: as on a real road, when no
+        # light is clearly visible (UNKNOWN) the car is allowed to proceed.
+        # Only an actively-seen RED holds it.
         red_latched = False
 
     if not inputs.motion_enabled:
