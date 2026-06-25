@@ -172,6 +172,9 @@ def generate_launch_description():
         parameters=[
             {
                 "simulation_mode": True,
+                # Gazebo top camera publishes RELIABLE; without this the node
+                # receives no frames and never publishes /traffic_light_state.
+                "image_reliability": "reliable",
                 "use_sim_time": use_sim_time,
             }
         ],
@@ -194,7 +197,10 @@ def generate_launch_description():
         executable="demo_orchestrator.py",
         name="demo_orchestrator",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{
+            "use_sim_time": use_sim_time,
+            "min_stop_sec": 3.0,
+        }],
         condition=IfCondition(auto_demo),
     )
 

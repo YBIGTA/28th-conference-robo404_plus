@@ -1,48 +1,76 @@
 #!/usr/bin/env bash
-# One-click RL demo: clean launch + auto-start driving.
-# Car drives from the start, passes 2 green lights, stops at the 3rd red.
+# One-click line-following demo, PID or RL mode.
+#
+#   ./demo.sh rl      # RL (SAC) follower
+#   ./demo.sh pid     # classic PID follower
+#   ./demo.sh both    # run PID first, then RL (sequential, same track)
+#   ./demo.sh         # defaults to rl
+#
+# Scenario (auto-demo): car waits at 1st red -> turns green -> drives ->
+# passes 2nd green -> stops at 3rd red -> waits -> turns green -> continues.
 # Record the Gazebo window yourself.
 #
-#   ./demo.sh
-#
 PROJECT=/home/jiucai/28th-conference-robo404_plus
-MAX_SPEED=${MAX_SPEED:-0.30}
+MODE="${1:-rl}"
+MAX_SPEED="${MAX_SPEED:-0.30}"   # RL: max_linear_speed ; PID: linear_speed
 
 cd "$PROJECT"
 source /opt/ros/foxy/setup.bash 2>/dev/null
 source install/setup.bash 2>/dev/null
-export DISPLAY=${DISPLAY:-:0}
+export DISPLAY="${DISPLAY:-:0}"
 
-echo "==> Cleaning up any old sim ..."
-for p in "ros2 launch robo_description" gzserver gzclient rl_follower \
-         sim_yolo traffic_light_node decision_node demo_orchestrator; do
-    pkill -9 -f "$p" 2>/dev/null
-done
-sleep 3
+cleanup() {
+    for p in "ros2 launch robo_description" gzserver gzclient \
+             rl_follower follower_node sim_yolo traffic_light_node \
+             decision_node demo_orchestrator; do
+        pkill -9 -f "$p" 2>/dev/null
+    done
+    sleep 3
+}
 
-echo "==> Launching demo pipeline (this opens the Gazebo window) ..."
-nohup ros2 launch robo_description rl_sim_test.launch.py \
-    auto_demo:=false rviz:=false max_linear_speed:="$MAX_SPEED" \
-    > /tmp/rl_demo_launch.log 2>&1 &
+run_one() {
+    local mode="$1"
+    cleanup
+    if [ "$mode" = "pid" ]; then
+        echo "==> Launching PID demo ..."
+        nohup ros2 launch robo_description sim_test.launch.py \
+            auto_demo:=true rviz:=false linear_speed:="$MAX_SPEED" \
+            > /tmp/demo_launch.log 2>&1 &
+    else
+        echo "==> Launching RL demo ..."
+        nohup ros2 launch robo_description rl_sim_test.launch.py \
+            auto_demo:=true rviz:=false max_linear_speed:="$MAX_SPEED" \
+            > /tmp/demo_launch.log 2>&1 &
+    fi
+    local pid=$!
+    echo "    launch PID $pid  (mode=$mode)"
+    for i in $(seq 1 40); do
+        grep -q "Successfully spawned entity" /tmp/demo_launch.log 2>/dev/null && break
+        sleep 1
+    done
+    sleep 6
+    echo "✅ ${mode^^} demo running. Auto-scenario in progress -- record the Gazebo window."
+    echo "$pid"
+}
 
-echo "==> Waiting for the robot to spawn ..."
-for i in $(seq 1 40); do
-    grep -q "Successfully spawned entity" /tmp/rl_demo_launch.log 2>/dev/null && break
-    sleep 1
-done
-sleep 6   # let all nodes finish wiring + first camera frames arrive
-
-echo ""
-echo "✅ Sim is up and the car is sitting at the START line (not moving yet)."
-echo "   1. Switch to the Gazebo window and START YOUR RECORDING."
-echo "   2. Come back here and press ENTER to make the car drive."
-echo ""
-read -r -p "Press ENTER to start the car... " _
-
-echo "==> GO! Car driving -> passes 2 greens -> stops at 3rd red."
-ros2 service call /start_follower std_srvs/srv/Empty >/dev/null 2>&1
-ros2 service call /start_driving  std_srvs/srv/Empty >/dev/null 2>&1
-
-echo ""
-echo "   It reaches the red light in ~18s. Stop recording after it stops."
-echo "   To shut down the sim later:  pkill -9 -f gzserver"
+case "$MODE" in
+    pid|rl)
+        run_one "$MODE" >/dev/null
+        echo ""
+        echo "Running. Stop with:  pkill -9 -f gzserver"
+        ;;
+    both)
+        echo "### PID run first ###"
+        run_one pid >/dev/null
+        echo "   (let the PID car finish the course, then press ENTER for RL)"
+        read -r _
+        echo "### RL run ###"
+        run_one rl >/dev/null
+        echo ""
+        echo "Both shown. Stop with:  pkill -9 -f gzserver"
+        ;;
+    *)
+        echo "usage: ./demo.sh [pid|rl|both]"
+        exit 1
+        ;;
+esac
