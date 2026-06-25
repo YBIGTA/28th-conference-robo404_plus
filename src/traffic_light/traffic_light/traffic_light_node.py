@@ -1,7 +1,12 @@
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import (
+    qos_profile_sensor_data,
+    QoSProfile,
+    ReliabilityPolicy,
+    HistoryPolicy,
+)
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from yolo_msgs.msg import DetectionArray
@@ -39,10 +44,15 @@ class TrafficLightNode(Node):
         self.declare_parameter("min_green_ratio", 0.03)
         self.declare_parameter("red_green_margin", 1.2)
         self.declare_parameter("simulation_mode", False)
+        # Camera QoS: 'best_effort' (default, correct for real camera drivers)
+        # or 'reliable' (the Gazebo sim camera publishes RELIABLE, so a
+        # best_effort subscriber gets no frames -> never publishes state).
+        self.declare_parameter("image_reliability", "best_effort")
 
         self.config = self.load_config()
         self.image_timeout_sec = self.get_parameter("image_timeout_sec").value
         self.simulation_mode = self.get_parameter("simulation_mode").value
+        self.image_reliability = self.get_parameter("image_reliability").value
 
         self.bridge = CvBridge()
         self.latest_image = None
@@ -55,11 +65,19 @@ class TrafficLightNode(Node):
             10,
         )
 
+        if self.image_reliability == "reliable":
+            image_qos = QoSProfile(
+                reliability=ReliabilityPolicy.RELIABLE,
+                history=HistoryPolicy.KEEP_LAST,
+                depth=10,
+            )
+        else:
+            image_qos = qos_profile_sensor_data
         self.create_subscription(
             Image,
             "/camera/rgb/image_raw",
             self.image_callback,
-            qos_profile_sensor_data,
+            image_qos,
         )
         self.create_subscription(
             DetectionArray,
