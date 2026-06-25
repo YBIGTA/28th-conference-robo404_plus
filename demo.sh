@@ -12,7 +12,7 @@
 #
 PROJECT=/home/jiucai/28th-conference-robo404_plus
 MODE="${1:-rl}"
-MAX_SPEED="${MAX_SPEED:-0.30}"   # RL: max_linear_speed ; PID: linear_speed
+MAX_SPEED="${MAX_SPEED:-0.35}"   # RL: max_linear_speed ; PID: linear_speed
 
 cd "$PROJECT"
 source /opt/ros/foxy/setup.bash 2>/dev/null

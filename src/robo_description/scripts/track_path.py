@@ -39,10 +39,25 @@ STRAIGHT = 1.0
 START_XY = (1.4, 1.6)     # on the top straight, near its left end
 START_HEADING = 0.0       # +X (driving to the right)
 
+# S-curve inserted into the bottom straight: a symmetric left-right-right-left
+# bump (R_S radius, S_ANGLE per bend) that returns to the same heading AND zero
+# net lateral offset, so the stadium loop still closes. Short pads either side
+# make the bottom run span the same width as the top straight.
+R_S = 0.25                # S-curve bend radius (tighter than the U-turns)
+S_ANGLE = math.pi / 3     # 60 deg per bend
+_S_SPAN = 0.866           # horizontal distance the S-bump covers (measured)
+_S_PAD = (STRAIGHT - _S_SPAN) / 2.0
+
 PRIMITIVES = [
     (STRAIGHT, 0.0),                 # 1. top straight (heading +X)
     (math.pi * R_TURN, +math.pi),    # 2. right U-turn (180 deg, curves down) -> -X
-    (STRAIGHT, 0.0),                 # 3. bottom straight (heading -X)
+    # 3. bottom run with an S-curve in the middle (net 0 turn, net 0 offset)
+    (_S_PAD, 0.0),
+    (S_ANGLE * R_S, +S_ANGLE),
+    (S_ANGLE * R_S, -S_ANGLE),
+    (S_ANGLE * R_S, -S_ANGLE),
+    (S_ANGLE * R_S, +S_ANGLE),
+    (_S_PAD, 0.0),
     (math.pi * R_TURN, +math.pi),    # 4. left U-turn (180 deg, curves up) -> closes loop
 ]
 STEP_M = 0.02             # integration step

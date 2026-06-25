@@ -223,7 +223,7 @@ def generate_launch_description():
         DeclareLaunchArgument("rviz", default_value="true"),
         DeclareLaunchArgument("yolo_model_path", default_value=default_yolo_model),
         DeclareLaunchArgument("rl_model_path", default_value=default_rl_model),
-        DeclareLaunchArgument("max_linear_speed", default_value="0.20"),
+        DeclareLaunchArgument("max_linear_speed", default_value="0.35"),
         DeclareLaunchArgument("auto_demo", default_value="true"),
         DeclareLaunchArgument("x_pose", default_value="-0.6"),
         DeclareLaunchArgument("y_pose", default_value="0.4"),
