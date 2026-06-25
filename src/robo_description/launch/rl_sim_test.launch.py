@@ -195,7 +195,12 @@ def generate_launch_description():
         executable="demo_orchestrator.py",
         name="demo_orchestrator",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{
+            "use_sim_time": use_sim_time,
+            # Wait this long after the car stops at a red before turning it
+            # green, so the stop is clearly visible in the demo.
+            "min_stop_sec": 3.0,
+        }],
         condition=IfCondition(auto_demo),
     )
 

@@ -18,9 +18,9 @@ from track_path import GROUND_M, image_to_world, sample_path
 # bottom straight ~0.50-0.75, left U-turn ~0.75-1.00. Reds sit on the straights
 # (so the car stops on a straight and resumes cleanly); a green decorates a turn.
 LIGHTS = [
-    # 1st & 2nd lights green so the car drives from the start; only the 3rd
-    # (last on the course) is red, so the car runs the course and stops there.
-    {"s": 0.12, "model": "traffic_light_green", "name": "light_green_1", "side": -1},
+    # 1st red (car waits at start, orchestrator turns it green -> go),
+    # 2nd green (drive through), 3rd red (car stops, waits, then green).
+    {"s": 0.12, "model": "traffic_light_red", "name": "light_red_1", "side": -1},
     {"s": 0.38, "model": "traffic_light_green", "name": "light_green_2", "side": -1},
     {"s": 0.62, "model": "traffic_light_red", "name": "light_red_3", "side": -1},
 ]

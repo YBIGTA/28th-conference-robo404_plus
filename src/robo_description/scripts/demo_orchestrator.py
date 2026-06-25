@@ -104,6 +104,15 @@ class DemoOrchestrator(Node):
     def _tick(self):
         now = time.time()
         if not self.started:
+            # If driving was already enabled externally (decision_node is
+            # actively deciding), don't block on our own start calls -- just
+            # take over the red->green switching.
+            if self.decision_state not in (None, "", "IDLE"):
+                self.get_logger().info(
+                    "Driving already active -> orchestrator taking over light switching"
+                )
+                self.started = True
+                return
             if now - self.t0 >= self.start_delay:
                 if not (self.start_follower_cli.service_is_ready()
                         and self.start_cli.service_is_ready()):
