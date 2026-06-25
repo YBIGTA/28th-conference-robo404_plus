@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robo404_bringup</name>
+  <version>0.1.0</version>
+  <description>Top-level launch files for the Robo404 ROS 2 pipeline</description>
+  <maintainer email="jiucai@todo.todo">jiucai</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>csi_camera</exec_depend>
+  <exec_depend>yolo_bringup</exec_depend>
+  <exec_depend>traffic_light</exec_depend>
+  <exec_depend>follower</exec_depend>
+  <exec_depend>decision</exec_depend>
+  <exec_depend>debug_monitor</exec_depend>
+  <exec_depend>micro_ros_agent</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

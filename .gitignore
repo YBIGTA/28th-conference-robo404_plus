@@ -3,6 +3,16 @@ build/
 install/
 log/
 
+# Model and runtime artifacts
+*.engine
+*.onnx
+*.pt
+*.pth
+*.bag
+*.db3
+*.mcap
+*.sqlite3
+
 # Python caches and test artifacts
 __pycache__/
 *.py[cod]
