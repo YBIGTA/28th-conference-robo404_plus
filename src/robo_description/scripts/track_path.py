@@ -34,31 +34,38 @@ LINE_WIDTH_M = 0.04       # painted line width (~real tape width at this scale)
 #   STRAIGHT = 1.0 m, R_TURN = 0.43 m
 #   overall track ~= (STRAIGHT + 2*R_TURN) x (2*R_TURN) = 1.86 x 0.86 m
 # Placed on a 4x4 m ground, roughly centered.
-R_TURN = 0.43
-STRAIGHT = 1.0
-START_XY = (1.4, 1.6)     # on the top straight, near its left end
+R_CORNER = 0.45           # rounded-corner radius of the circuit
+R_S = 0.35                # S-chicane bend radius
+S_ANGLE = math.pi / 2     # 90 deg per chicane bend
+W = 1.6                   # circuit width  (top/bottom edge length)
+H = 1.0                   # circuit height (left/right edge length)
+_S_SPAN = 1.40            # horizontal distance the chicane covers (measured)
+_TOP_PAD = (W - _S_SPAN) / 2.0
+
+# Race-circuit loop: a rounded rectangle (four 90-deg corners = 360-deg loop)
+# with an S-chicane carved into the TOP edge. The chicane is symmetric
+# (+,-,-,+) so it returns to the same heading with zero net offset and the
+# loop still closes. Course in driving order from START (top edge, heading +X):
+#   1. top edge with S-chicane
+#   2-5. four rounded corners + right/bottom/left edges back to start
+START_XY = (1.0, 1.2)
 START_HEADING = 0.0       # +X (driving to the right)
 
-# S-curve inserted into the bottom straight: a symmetric left-right-right-left
-# bump (R_S radius, S_ANGLE per bend) that returns to the same heading AND zero
-# net lateral offset, so the stadium loop still closes. Short pads either side
-# make the bottom run span the same width as the top straight.
-R_S = 0.25                # S-curve bend radius (tighter than the U-turns)
-S_ANGLE = math.pi / 3     # 60 deg per bend
-_S_SPAN = 0.866           # horizontal distance the S-bump covers (measured)
-_S_PAD = (STRAIGHT - _S_SPAN) / 2.0
-
+_C = (math.pi / 2) * R_CORNER     # arc length of one 90-deg corner
 PRIMITIVES = [
-    (STRAIGHT, 0.0),                 # 1. top straight (heading +X)
-    (math.pi * R_TURN, +math.pi),    # 2. right U-turn (180 deg, curves down) -> -X
-    # 3. bottom run with an S-curve in the middle (net 0 turn, net 0 offset)
-    (_S_PAD, 0.0),
+    (_TOP_PAD, 0.0),
     (S_ANGLE * R_S, +S_ANGLE),
     (S_ANGLE * R_S, -S_ANGLE),
     (S_ANGLE * R_S, -S_ANGLE),
-    (S_ANGLE * R_S, +S_ANGLE),
-    (_S_PAD, 0.0),
-    (math.pi * R_TURN, +math.pi),    # 4. left U-turn (180 deg, curves up) -> closes loop
+    (S_ANGLE * R_S, +S_ANGLE),       # top S-chicane (net 0)
+    (_TOP_PAD, 0.0),
+    (_C, +math.pi / 2),              # corner -> heading +Y (down)
+    (H, 0.0),                        # right edge
+    (_C, +math.pi / 2),              # corner -> heading -X
+    (W, 0.0),                        # bottom edge
+    (_C, +math.pi / 2),              # corner -> heading -Y (up)
+    (H, 0.0),                        # left edge
+    (_C, +math.pi / 2),              # corner -> closes the loop
 ]
 STEP_M = 0.02             # integration step
 
