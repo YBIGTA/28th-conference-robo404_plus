@@ -1,10 +1,12 @@
 <div align="center">
 
-# ROBO 404+ — Vision-based 4WD Autonomous Driving Mobility
+# ROBO 404++ — Vision-based 4WD Autonomous Driving Mobility
 
 **비전 센서 기반 4WD 자율주행 · OpenCV + YOLO 융합 차선 주행 · Jetson Nano 엣지 추론**
 
-YBIGTA 28기 컨퍼런스 프로젝트 (robo404+)
+YBIGTA 28기 컨퍼런스 프로젝트 (robo404++)
+
+📦 **하드웨어 레포**: [jiy0-0nv/robo404pp_hardware](https://github.com/jiy0-0nv/robo404pp_hardware)
 
 ![ROS2](https://img.shields.io/badge/ROS2-Humble-22314E?logo=ros&logoColor=white)
 ![YOLO](https://img.shields.io/badge/YOLO-Ultralytics-00FFFF?logo=yolo&logoColor=black)
@@ -53,7 +55,7 @@ ros2 launch yolo_bringup yolov8.launch.py
 
 ## 1. Project Overview
 
-ROBO 404+는 **비전 센서 기반 4WD 자율주행 모빌리티**입니다. 카메라 영상을 **OpenCV(차선 인식)** 와 **YOLOv8(신호등 인식)** 로 분석하고, 이를 **하나의 의사결정 노드(Decision Node)에서 융합**하여 안전하게 차선을 주행하는 로봇입니다.
+ROBO 404++는 **비전 센서 기반 4WD 자율주행 모빌리티**입니다. 카메라 영상을 **OpenCV(차선 인식)** 와 **YOLOv8(신호등 인식)** 로 분석하고, 이를 **하나의 의사결정 노드(Decision Node)에서 융합**하여 안전하게 차선을 주행하는 로봇입니다.
 
 - **입력**: 카메라 영상 (Pi Camera V2)
 - **처리**: OpenCV 차선 추종(`follower node`) + YOLO 신호등 인식 → **Decision Node에서 융합**
@@ -324,3 +326,7 @@ trtexec --onnx=yolov8s.onnx --saveEngine=yolov8s.engine --fp16
 - `follower` — MIT, Gabriel Nascarella Hishida
 - `yolo_ros` / `yolo_msgs` / `yolo_bringup` — GPL-3.0, Miguel Ángel González Santamarta
 - `yolo_bridge` (TensorRT) — Q-engineering, YoloV8-TensorRT-Jetson_Nano
+
+## Related Repositories
+
+- **하드웨어**: [jiy0-0nv/robo404pp_hardware](https://github.com/jiy0-0nv/robo404pp_hardware) — 4WD 섀시 / 펌웨어(Raspberry Pi Pico 2) 등 하드웨어 구성
