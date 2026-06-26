@@ -1,0 +1,89 @@
+current_pipeline:
+  camera_input:
+    input:
+      topic: "/camera/image_raw"
+      producer: "csi_camera/camera"
+      consumers:
+        - "follower_node"
+        - "yolo_node"
+        - "traffic_light_node"
+    output:
+      topic: "/camera/image_raw"
+      status: "keep"
+
+  line_following:
+    input:
+      topic: "/camera/image_raw"
+      producer: "csi_camera/camera"
+      consumer: "follower_node"
+    output:
+      topic: "/cmd_vel_line"
+      node: "follower_node"
+      status: "keep"
+
+  yolo_detection:
+    input:
+      topic: "/camera/image_raw"
+      producer: "csi_camera/camera"
+      consumer: "yolo_node"
+    output:
+      topic: "/yolo/detections"
+      node: "yolo_node"
+      status: "keep"
+
+target_pipeline:
+  camera:
+    producer: "csi_camera/camera"
+    output_topic: "/camera/image_raw"
+    consumers:
+      - "follower_node"
+      - "yolo_node"
+      - "traffic_light_node"
+
+  line_following:
+    input_topic: "/camera/image_raw"
+    consumer: "follower_node"
+    node_outputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+
+  yolo_detection:
+    input_topic: "/camera/image_raw"
+    consumer: "yolo_node"
+    node_outputs:
+      - "/yolo/detections"
+
+  traffic_light:
+    consumer: "traffic_light_node"
+    inputs:
+      - producer: "yolo_node"
+        topic: "/yolo/detections"
+      - producer: "csi_camera/camera"
+        topic: "/camera/image_raw"
+    node_outputs:
+      - "/traffic_light_state"
+
+  decision:
+    node: "decision_node"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/traffic_light_state"
+    outputs:
+      - "/cmd_vel"
+      - "/decision_state"
+
+  debug_monitor:
+    node: "debug_monitor_node"
+    status: "new"
+    launch_arg: "use_debug_monitor:=True"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/yolo/detections"
+      - "/traffic_light_state"
+      - "/decision_state"
+      - "/cmd_vel"
+    outputs:
+      - "/debug/pipeline_state"
+      - "/debug/pipeline_warnings"

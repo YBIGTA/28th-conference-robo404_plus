@@ -1,0 +1,138 @@
+topics:
+  "/camera/image_raw":
+    type: "sensor_msgs/msg/Image"
+    status: "changed"
+    producer: "csi_camera/camera"
+    consumers:
+      - "follower_node"
+      - "yolo_node"
+      - "debug_node"
+      - "traffic_light_node"
+    description: "라인 검출, YOLO 추론, 신호등 색상 분석에 공용으로 쓰는 카메라 이미지"
+
+  "/cmd_vel_line":
+    type: "geometry_msgs/msg/Twist"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "decision_node"
+      - "debug_monitor_node"
+    description: "라인 추종 기준 후보 속도. 최종 주행 명령이 아니다."
+
+  "/path_state":
+    type: "std_msgs/msg/String"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "decision_node"
+      - "debug_monitor_node"
+    description: "라인 인식 상태"
+    allowed_values:
+      - "LINE_VISIBLE"
+      - "LINE_LOST"
+      - "FINAL_STOP"
+    future_fields:
+      - "line_error_x"
+      - "line_confidence"
+      - "lost_duration"
+
+  "/follower/debug_image":
+    type: "sensor_msgs/msg/Image"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "debug viewer"
+    description: "Follower line detection overlay image. publish_debug_image가 true일 때만 발행된다."
+
+  "/follower/mask_image":
+    type: "sensor_msgs/msg/Image"
+    status: "new"
+    producer: "follower_node"
+    consumers:
+      - "debug viewer"
+    description: "Follower crop 영역의 threshold mask image. publish_mask_image가 true일 때만 발행된다."
+
+  "/yolo/detections":
+    type: "yolo_msgs/msg/DetectionArray"
+    status: "existing"
+    producer: "yolo_node"
+    consumers:
+      - "traffic_light_node"
+      - "debug_node"
+      - "debug_monitor_node"
+    description: "YOLO 객체 검출 결과. 1차 traffic_light_node에서는 traffic light bbox 위치를 찾는 데 사용한다."
+
+  "/traffic_light_state":
+    type: "std_msgs/msg/String"
+    status: "new"
+    producer: "traffic_light_node"
+    consumers:
+      - "decision_node"
+      - "debug_monitor_node"
+    description: "신호등 상태"
+    allowed_values:
+      - "UNKNOWN"
+      - "RED"
+      - "GREEN"
+    future_fields:
+      - "confidence"
+      - "detected_class_name"
+      - "stamp"
+
+  "/cmd_vel":
+    type: "geometry_msgs/msg/Twist"
+    status: "changed"
+    producer: "decision_node"
+    consumers:
+      - "Robot Base"
+      - "debug_monitor_node"
+    description: "최종 주행 명령. 1차 구조에서는 decision_node만 발행한다."
+    previous_producer:
+      - "follower_node"
+
+  "/decision_state":
+    type: "std_msgs/msg/String"
+    status: "new"
+    producer: "decision_node"
+    consumers:
+      - "debug"
+      - "logger"
+      - "debug_monitor_node"
+    description: "decision_node의 현재 판단 상태"
+    allowed_values:
+      - "IDLE"
+      - "FOLLOW_LINE"
+      - "STOP_FOR_RED"
+      - "WAIT_GREEN"
+      - "LINE_LOST"
+      - "FINAL_STOP"
+    future_fields:
+      - "reason"
+      - "motion_enabled"
+      - "stamp"
+
+  "/yolo/dbg_image":
+    type: "sensor_msgs/msg/Image"
+    status: "optional"
+    producer: "debug_node"
+    consumers:
+      - "debug viewer"
+    description: "YOLO detection 결과가 그려진 ROS 디버그 이미지. 기본 debug 출력은 UDP stream이며, 이 토픽은 publish_dbg_image:=True일 때만 발행한다."
+
+  "/debug/pipeline_state":
+    type: "std_msgs/msg/String"
+    status: "new"
+    producer: "debug_monitor_node"
+    consumers:
+      - "operator"
+      - "logger"
+    description: "전체 파이프라인 상태를 한 줄로 요약한 디버그 문자열"
+
+  "/debug/pipeline_warnings":
+    type: "std_msgs/msg/String"
+    status: "new"
+    producer: "debug_monitor_node"
+    consumers:
+      - "operator"
+      - "logger"
+    description: "timeout, decision mismatch, command mismatch 같은 통합 디버그 warning"

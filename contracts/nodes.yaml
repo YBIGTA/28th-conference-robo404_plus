@@ -1,0 +1,158 @@
+nodes:
+  camera:
+    package: "csi_camera"
+    status: "new"
+    responsibility:
+      - "Jetson CSI 카메라 하나를 연다"
+      - "라인 검출, YOLO, 신호등 색상 판단용 이미지를 ROS 토픽으로 발행한다"
+    inputs:
+      - "CSI camera sensor_id"
+    outputs:
+      - "/camera/image_raw"
+    parameters:
+      - "sensor_id"
+      - "capture_width"
+      - "capture_height"
+      - "output_width"
+      - "output_height"
+      - "framerate"
+      - "flip_method"
+      - "frame_id"
+
+  follower_node:
+    package: "follower"
+    status: "changed"
+    responsibility:
+      - "카메라 영상에서 라인 검출"
+      - "라인 기준 주행 후보 속도 생성"
+      - "라인 상태 생성"
+    inputs:
+      - "/camera/image_raw"
+    outputs:
+      add:
+        - "/cmd_vel_line"
+        - "/path_state"
+        - "/follower/debug_image"
+        - "/follower/mask_image"
+      remove_or_stop:
+        - "/cmd_vel"
+    parameters:
+      - "publish_debug_image"
+      - "publish_mask_image"
+      - "enable_udp_stream"
+      - "stream_host"
+      - "stream_port"
+      - "stream_width"
+      - "stream_height"
+      - "stream_framerate"
+      - "stream_bitrate"
+      - "use_hw_encoder"
+      - "draw_fps"
+      - "show_debug_window"
+      - "image_topic"
+    services:
+      existing:
+        - "/start_follower"
+        - "/stop_follower"
+      note: "추후 전체 주행 시작/정지는 decision_node 쪽으로 옮기는 것이 좋다."
+
+  yolo_node:
+    package: "yolo_jetson"
+    status: "changed"
+    responsibility:
+      - "카메라 영상에서 Jetson Nano TensorRT YOLO 객체 검출 수행"
+      - "검출 결과를 /yolo/detections로 발행"
+    inputs:
+      - "/camera/image_raw"
+    outputs:
+      - "/yolo/detections"
+    services:
+      existing:
+        - "/yolo/enable"
+      removed:
+        - "/yolo/set_classes"
+    note: "신호등 RED/GREEN 의미 판단은 yolo_node가 아니라 traffic_light_node에서 처리한다."
+
+  traffic_light_node:
+    package: "traffic_light"
+    status: "new"
+    responsibility:
+      - "/yolo/detections에서 traffic light bbox를 선택"
+      - "/camera/image_raw에서 bbox 영역 색상을 분석"
+      - "UNKNOWN / RED / GREEN 상태 발행"
+    inputs:
+      - "/yolo/detections"
+      - "/camera/image_raw"
+    outputs:
+      - "/traffic_light_state"
+    parameters:
+      - "image_topic"
+
+  decision_node:
+    package: "decision"
+    status: "new"
+    responsibility:
+      - "라인 추종 후보 속도, 라인 상태, 신호등 상태를 종합"
+      - "최종 /cmd_vel 발행"
+      - "현재 판단 상태 /decision_state 발행"
+    inputs:
+      - "/cmd_vel_line"
+      - "/path_state"
+      - "/traffic_light_state"
+    outputs:
+      - "/cmd_vel"
+      - "/decision_state"
+    services:
+      add:
+        - name: "/start_driving"
+          type: "std_srvs/srv/Empty"
+        - name: "/stop_driving"
+          type: "std_srvs/srv/Empty"
+
+  debug_node:
+    package: "yolo_debug"
+    status: "changed"
+    responsibility:
+      - "YOLO detection 결과를 이미지 위에 그려서 UDP H.264 stream으로 확인"
+    inputs:
+      - "/camera/image_raw"
+      - "/yolo/detections"
+    outputs:
+      optional_ros:
+        - "/yolo/dbg_image"
+      network:
+        - "UDP H.264 RTP stream"
+      removed:
+        - "/yolo/dgb_bb_markers"
+        - "/yolo/dgb_kp_markers"
+    note: "use_debug:=True이면 UDP stream을 기본으로 켠다. /yolo/dbg_image는 publish_dbg_image:=True일 때만 발행한다."
+
+  debug_monitor_node:
+    package: "debug_monitor"
+    status: "new"
+    responsibility:
+      - "주요 topic freshness 확인"
+      - "perception / decision / command 상태 한 줄 요약"
+      - "decision_state와 /cmd_vel 일관성 warning 발행"
+    inputs:
+      - "/path_state"
+      - "/cmd_vel_line"
+      - "/yolo/detections"
+      - "/traffic_light_state"
+      - "/decision_state"
+      - "/cmd_vel"
+    outputs:
+      - "/debug/pipeline_state"
+      - "/debug/pipeline_warnings"
+    parameters:
+      - "publish_rate_hz"
+      - "path_state_timeout_sec"
+      - "cmd_vel_line_timeout_sec"
+      - "yolo_detections_timeout_sec"
+      - "traffic_light_state_timeout_sec"
+      - "decision_state_timeout_sec"
+      - "cmd_vel_timeout_sec"
+      - "zero_twist_epsilon"
+      - "cmd_compare_epsilon"
+      - "traffic_light_class_names"
+    note: "실제 판단을 바꾸지 않고 관측과 warning만 담당한다. full_pipeline.launch.py에서 use_debug_monitor:=True일 때 실행된다."
